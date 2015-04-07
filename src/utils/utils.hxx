@@ -16,6 +16,13 @@ extern void HexDump(unsigned char *ptr, int length, bool addhdr = false, bool ad
 
 extern int in_world_range(double lat, double lon);
 
+#ifdef _MSC_VER
+#define M_IS_DIR _S_IFDIR
+#else // !_MSC_VER
+#define M_IS_DIR S_IFDIR
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

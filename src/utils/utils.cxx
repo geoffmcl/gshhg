@@ -9,6 +9,11 @@
 //#include <iostream>
 #include "sprtf.hxx"
 #include "utils.hxx"
+#ifndef WIN332
+#define ITOA _itoa
+#else
+#define ITOA itoa
+#endif
 
 using namespace std;
 
@@ -34,7 +39,7 @@ int is_file_or_directory( char *file )
 {
     int iret = 0;
     if (stat(file,&stat_buf) == 0) {
-        if (stat_buf.st_mode &  _S_IFDIR) 
+        if (stat_buf.st_mode &  M_IS_DIR) 
             iret = 2;
         else
             iret = 1;
@@ -112,11 +117,11 @@ void HexDump(unsigned char *ptr, int length, bool addhdr, bool addascii, bool ad
                 if ( value < 0x10 )
                 {
                     *buffPtr++ = '0';
-                    _itoa( value, buffPtr++, 16);
+                    ITOA( value, buffPtr++, 16);
                 }
                 else
                 {
-                    _itoa( value, buffPtr, 16);
+                    ITOA( value, buffPtr, 16);
                     buffPtr+=2;
                 }
  
