@@ -1,7 +1,7 @@
 /*\
  * gshhg.cxx
  *
- * Copyright (c) 2014 - Geoff R. McLane
+ * Copyright (c) 2015 - Geoff R. McLane
  * Licence: GNU GPL version 2
  *
  * from : http://www.soest.hawaii.edu/pwessel/gshhg/
