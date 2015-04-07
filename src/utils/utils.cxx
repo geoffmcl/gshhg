@@ -121,7 +121,7 @@ void HexDump(unsigned char *ptr, int length, bool addhdr, bool addascii, bool ad
                     ITOA( value, buffPtr++, 16);
 #else
                     sprintf(buffPtr,"%d",value);
-                    buffPtr++
+                    buffPtr++;
 #endif
                 }
                 else

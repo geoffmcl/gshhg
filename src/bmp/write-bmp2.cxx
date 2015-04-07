@@ -7,7 +7,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <fstream>      // std::ifstream, std::ofstream
-
+#ifndef WIN32
+#include <stdlib.h> // for rand, ...
+#include <string.h> // for memset, ...
+#endif
 // mimeType = "image/bmp";
 #define width 512
 #define height 256

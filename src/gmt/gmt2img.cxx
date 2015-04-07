@@ -4,7 +4,11 @@
 #include <stdio.h>
 #include <memory.h> // for memcpy()
 #include <vector>
+#ifdef WIN32
 #include <direct.h> // for _getcwd()
+#else
+#include <unistd.h> // got getcwd(), ...
+#endif
 #include "sprtf.hxx"
 #include "utils.hxx"
 #include "bmp_utils.hxx"    // write a BMP, using a byte array width x height - filled 255 or 0
@@ -18,6 +22,12 @@
 //static const char *def_file = "C:\\Users\\user\\Downloads\\GSHHS_shp\\NOAA\\15487.dat";
 static const char *def_file = "gshhs.csv";
 #define MX_LINE 256
+
+#ifdef WIN32
+#define GETCWD _getcwd
+#else
+#define GETCWD getcwd
+#endif
 
 char *out_png = "tempout5.png";
 char *out_bmp = "tempout5.bmp";
@@ -268,17 +278,19 @@ int write_image()
             exit(1);
         }
     }
-    iret |= writeBMPImage(out_bmp, x, y, buffer, bsiz);
 #ifdef USE_PNG_LIB
     // Also using a bit depth of 8, but this seems more that needed for simple BW image
     // but need to understand more of PNG creation...
     iret |= writePNGImage(out_png, x, y, bit_depth, color_type, buffer );
 #endif
+#ifdef WIN32
+    iret |= writeBMPImage(out_bmp, x, y, buffer, bsiz);
     size_t bitlen;
     unsigned char *bitarray = genImage( x, y, 1, buffer, bsiz, &bitlen );
     if (bitarray) {
         iret = writeBMP1bit( out_1bit, x, y, 1, bitarray, bitlen );
     }
+#endif
     free(buffer);
     return iret;
 }
@@ -309,7 +321,7 @@ int show_unique()
 void give_help(char *name)
 {
     char cwd[MAX_PATH];
-    if( !_getcwd(cwd,MAX_PATH) )
+    if( !GETCWD(cwd,MAX_PATH) )
         strcpy(cwd,"Not available!");
     printf("Usage: %s in_gmt_file\n",name);
     printf("\n");

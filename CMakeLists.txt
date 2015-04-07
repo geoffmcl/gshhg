@@ -53,8 +53,8 @@ if(WIN32 AND MSVC)
     # to distinguish between debug and release lib
     set( CMAKE_DEBUG_POSTFIX "d" )
 else()
-#    message( FATAL_ERROR "This program can ONLY be compiled in Windows!" )
 #   unix things
+    set( WARNING_FLAGS "${WARNING_FLAGS} -Wno-write-strings" )
 endif()
 
 set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT" )
@@ -119,7 +119,6 @@ include_directories( ${dir} )
 set(${name}_SRCS
     ${dir}/readbmp.c
     ${dir}/endianness.c
-    ${dir}/winBMP.cxx
     )
 set(${name}_HDRS
     ${dir}/bmp_utils.hxx
@@ -128,6 +127,9 @@ set(${name}_HDRS
     ${dir}/endianness.h
     ${dir}/readbmp.h
     )
+if (WIN32)
+    list(APPEND ${name}_SRCS ${dir}/winBMP.cxx)
+endif ()
 add_library( ${name} ${${name}_SRCS} ${${name}_HDRS} )
 list(APPEND add_LIBS ${name} )
 # no install of this library
@@ -168,20 +170,22 @@ endif()
 # deal with install 
 # install(TARGETS ${name} DESTINATION bin )
 
-set(name Int2BMP)
-set(dir src/bmp)
-set(${name}_SRCS
-    ${dir}/Int2BMP.cpp
-    )
-add_executable(${name} ${${name}_SRCS})
-if(add_LIBS)
-    target_link_libraries( ${name} ${add_LIBS} )
+if (WIN32)
+    set(name Int2BMP)
+    set(dir src/bmp)
+    set(${name}_SRCS
+        ${dir}/Int2BMP.cpp
+        )
+    add_executable(${name} ${${name}_SRCS})
+    if(add_LIBS)
+        target_link_libraries( ${name} ${add_LIBS} )
+    endif ()
+    if(WIN32)
+        set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
+    endif()
+    # deal with install 
+    # install(TARGETS ${name} DESTINATION bin )
 endif ()
-if(WIN32)
-    set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
-endif()
-# deal with install 
-# install(TARGETS ${name} DESTINATION bin )
 
 # =========================================================
 # from : http://paulbourke.net/dataformats/bmp/
