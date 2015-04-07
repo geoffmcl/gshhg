@@ -1,0 +1,1381 @@
+This file contains examples of Windows BMP and OS2 BMP header structures,
+how to read, write, display, decode, and encode a BMP file, and how
+to use all the functions in the BMP library.
+
+
+BMP Header File
+
+BMP.H
+
+
+/****************************************************************************\
+**  Title:   BMP.H                                                          **
+**  Purpose: BMP Header file                                                **
+**  Version: 1.0                                                            **
+**  Date:    October 1991                                                   **
+**  Author:  James D. Murray, Anaheim, CA, USA                              **
+**                                                                          **
+**  This header file contains the structures for the three flavors of the   **
+**  BMP image file format (OS/2 1.x, WIndows 3.0, and OS/2 2.0).  Each BMP  **
+**  file will contain a BMPINFO header followed by either a PMINFPHEAD,     **
+**  WININFOHEAD, or PM2INFOHEAD header.  To simplify reading and writing    **
+**  BMP files the BMP file format structure defined in BMP.H contains       **
+**  structures for all three flavors of the BMP image file format.          **
+**                                                                          **
+**  Copyright (C) 1991 Graphics Software Labs.  All rights reserved.        **
+\****************************************************************************/
+#ifndef BMP_H
+#define BMP_H   1
+
+#include "datatype.h"        /* Include the data type definitions */
+
+#define COMPRESS_RGB        0L      /* No compression               */
+#define COMPRESS_RLE8       1L      /* 8 bits per pixel compression */
+#define COMPRESS_RLE4       2L      /* 4 bits per pixel compression */
+#define BMP_ID              0x4d42  /* BMP "magic" number           */
+
+#define LSN(value)	((value) & 0x0f)	    /* Least-significant nibble */
+#define MSN(value)	(((value) & 0xf0) >> 4)	/* Most-significant nibble  */
+
+/*
+**  BMP File Format Bitmap Header.
+*/
+typedef struct _BmpInfo     /* Offset   Description                      */
+{
+    WORD   Type;            /*  00h     File Type Identifier             */
+    DWORD  FileSize;        /*  02h     Size of File                     */
+    WORD   Reserved1;       /*  06h     Reserved (should be 0)           */
+    WORD   Reserved2;       /*  08h     Reserved (should be 0)           */
+    DWORD  Offset;          /*  0Ah     Offset to bitmap data            */
+} BMPINFO;
+
+/*
+**  Presentation Manager (OS/2 1.x) Information Header Format.
+*/
+typedef struct _PmInfoHeader   /* Offset   Description                     */
+{
+    DWORD   Size;               /*  0Eh     Size of Remianing Header        */
+    WORD    Width;              /*  12h     Width of Bitmap in Pixels       */
+    WORD    Height;             /*  14h     Height of Bitmap in Pixels      */
+    WORD    Planes;             /*  16h     Number of Planes                */
+    WORD    BitCount;           /*  18h     Color Bits Per Pixel            */
+} PMINFOHEAD;
+
+/*
+**  Windows 3.x Information Header Format.
+*/
+typedef struct _WinInfoHeader   /* Offset  Description                      */
+{
+    DWORD  Size;                /*  0Eh    Size of Remianing Header         */
+    DWORD  Width;               /*  12h    Width of Bitmap in Pixels        */
+    DWORD  Height;              /*  16h    Height of Bitmap in Pixels       */
+    WORD   Planes;              /*  1Ah    Number of Planes                 */
+    WORD   BitCount;            /*  1Ch    Bits Per Pixel                   */
+    DWORD  Compression;         /*  1Eh    Compression Scheme (0=none)      */
+    DWORD  SizeImage;           /*  22h    Size of bitmap in bytes          */
+    DWORD  XPelsPerMeter;       /*  26h    Horz. Resolution in Pixels/Meter */
+    DWORD  YPelsPerMeter;       /*  2Ah    Vert. Resolution in Pixels/Meter */
+    DWORD  ClrUsed;             /*  2Eh    Number of Colors in Color Table  */
+    DWORD  ClrImportant;        /*  32h    Number of Important Colors       */
+} WININFOHEAD;
+
+/*
+**  Presentation Manager (OS/2 2.0) Information Header Format.
+*/
+typedef struct _Pm2InfoHeader   /* Offset  Description                      */
+{  
+    DWORD   Size;               /*  0Eh    Size of Info Header (always 64)  */
+    WORD    Width;              /*  12h    Width of Bitmap in Pixels        */
+    WORD    Height;             /*  14h    Height of Bitmap in Pixels       */
+    WORD    Planes;             /*  16h    Number of Planes                 */
+    WORD    BitCount;           /*  18h    Color Bits Per Pixel             */
+    DWORD   Compression;        /*  1Ah    Compression Scheme (0=none)      */
+    DWORD   SizeImage;          /*  1Eh    Size of bitmap in bytes          */
+    DWORD   XPelsPerMeter;      /*  22h    Horz. Resolution in Pixels/Meter */
+    DWORD   YPelsPerMeter;      /*  26h    Vert. Resolution in Pixels/Meter */
+    DWORD   ClrUsed;            /*  2Ah    Number of Colors in Color Table  */
+    DWORD   ClrImportant;       /*  2Eh    Number of Important Colors       */
+    WORD    Units;              /*  32h    Resolution Mesaurement Used      */
+    WORD    Reserved;           /*  34h    Reserved FIelds (always 0)       */
+    WORD    Recording;          /*  36h    Orientation of Bitmap            */
+    WORD    Rendering;          /*  38h    Halftone Algorithm Used on Image */
+    DWORD   Size1;              /*  3Ah    Halftone Algorithm Data          */
+    DWORD   Size2;              /*  3Eh    Halftone Algorithm Data          */
+    DWORD   ColorEncoding;      /*  42h    Color Table Format (always 0)    */
+    DWORD   Identifier;         /*  46h    Misc. Field for Application Use  */
+} PM2INFOHEAD;
+
+/*
+**  Presentation Manager (OS/2) RGB Color Triple.
+*/
+typedef struct _PmRgbTriple
+{
+    BYTE   rgbBlue;             /* Blue Intensity Value  */
+    BYTE   rgbGreen;            /* Green Intensity Value */
+    BYTE   rgbRed;              /* Red Intensity Value   */
+} PMRGBTRIPLE;
+
+/*
+**  Windows 3.x RGB Color Quadruple.
+*/
+typedef struct _WinRgbQuad
+{
+    BYTE   rgbBlue;             /* Blue Intensity Value   */
+    BYTE   rgbGreen;            /* Green Intensity Value  */
+    BYTE   rgbRed;              /* Red Intensity Value    */
+    BYTE   rgbReserved;         /* Reserved (should be 0) */
+} WINRGBQUAD;
+
+/*
+**  OS/2 2.0 RGB Color Quadruple.
+*/
+typedef struct _Pm2RgbQuad
+{
+    BYTE   rgbBlue;             /* Blue Intensity Value   */
+    BYTE   rgbGreen;            /* Green Intensity Value  */
+    BYTE   rgbRed;              /* Red Intensity Value    */
+    BYTE   rgbReserved;         /* Reserved (should be 0) */
+} PM2RGBQUAD;
+
+
+/*
+** Composite structure of the BMP image file format.
+**
+** This structure holds information for all three flavors of the BMP format.
+*/
+typedef struct _BmpHeader
+{
+    BMPINFO      Header;        /* Bitmap Header                */
+    PMINFOHEAD   PmInfo;        /* OS/2 1.x Information Header  */
+    PMRGBTRIPLE *PmColorTable;  /* OS/2 1.x Color Table         */
+    WININFOHEAD  WinInfo;       /* Windows 3 Information Header */
+    WINRGBQUAD  *WinColorTable; /* Windows 3 Color Table        */
+    PM2INFOHEAD  Pm2Info;       /* OS/2 2.0 Information Header  */
+    PM2RGBQUAD  *Pm2ColorTable; /* OS/2 2.0 Color Table         */
+} BMPHEADER;
+
+/*
+**  Function prototypes
+*/
+SHORT ReadBmpHeader(BMPHEADER *, FILE *);
+VOID  WriteBmpHeader(BMPHEADER *, FILE *);
+SHORT BmpEncodeScanLine(BYTE *, WORD, WORD, DWORD, FILE *);
+SHORT BmpDecodeScanLine(BYTE *, WORD, WORD, DWORD, FILE *);
+
+#endif /* BMP_H */
+
+
+
+BMP Header Reader
+
+BMPREAD.C
+
+
+The function reads the header(s) of a BMP file.  The data is stored in
+the appropriate areas of the header structure
+depending upon the flavor of the BMP file being read.
+
+
+/****************************************************************************\
+**  Title:        BMPREAD                                                   **
+**  Purpose:      Display the data in a BMP image file header.              **
+**  Version:      1.0                                                       **
+**  Date:         September 1991                                            **
+**  Author:       James D. Murray, Anaheim, CA, USA                         **
+**  C Compilers:  Borland C++ v2.0, Microsoft C v6.00a                      **
+**                                                                          **
+**  This module contains the following function:                            **
+**                                                                          **
+**      ReadBmpHeader - Read a BMP header from a FILE stream.               **
+**                                                                          **
+**  Copyright (C) 1991 James D. Murray.  All rights reserved.               **
+\****************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include "endianio.h"
+#include "bmp.h"
+
+/* External global variables */
+WORD (*GetWord)(FILE *);
+DWORD (*GetDword)(FILE *);
+
+/*
+**  Read a Windows or PM BMP header.
+**
+**  This function reads the information from a FILE stream open
+**  to a BMP file and writes the information to a BMPHEADER structure.
+**
+**  Returns: Nothing.
+*/
+SHORT
+ReadBmpHeader(BmpHead, FpBmp)
+BMPHEADER *BmpHead;     /* Pointer to BMP header structure  */
+FILE      *FpBmp;       /* BMP image file input FILE stream */
+{
+    register SHORT i;       /* Loop Counter */
+    DWORD InfoHeaderSize;   /* Size of the BMP information header in bytes */
+    WORD  NumColors;        /* Number of colors in color table */
+
+    GetWord  = GetLittleWord;    /* Read using little-endian byte order */
+    GetDword = GetLittleDword;
+
+    BmpHead->Header.Type      = GetWord(FpBmp);
+    BmpHead->Header.FileSize  = GetDword(FpBmp);
+    BmpHead->Header.Reserved1 = GetWord(FpBmp);
+    BmpHead->Header.Reserved2 = GetWord(FpBmp);
+    BmpHead->Header.Offset    = GetDword(FpBmp);
+
+    InfoHeaderSize            = GetDword(FpBmp);
+
+    /*
+    ** The type of information found in a BMP structure is indicated by
+    ** the Size (Information Headere Size) field with a non-zero value.
+    */
+    BmpHead->PmInfo.Size   = 0;
+    BmpHead->WinInfo.Size  = 0;
+    BmpHead->Pm2Info.Size  = 0;
+
+    /*
+    ** The size if the information header indicates if the BMP file
+    ** originated on an MS Windows or OS/2 Presentation Manager system.
+    */
+    if (InfoHeaderSize == 12L)         /* OS/2 1.x */
+    {
+        BmpHead->PmInfo.Size     = InfoHeaderSize;
+        BmpHead->PmInfo.Width    = GetWord(FpBmp);
+        BmpHead->PmInfo.Height   = GetWord(FpBmp);
+        BmpHead->PmInfo.Planes   = GetWord(FpBmp);
+        BmpHead->PmInfo.BitCount = GetWord(FpBmp);
+
+        if (BmpHead->PmInfo.BitCount != 24)
+        {
+            /* Determine number of entries in color table */
+            NumColors = (WORD) (1U << (BmpHead->PmInfo.Planes *
+              BmpHead->PmInfo.BitCount));
+ 
+            /* Allocate memory for the color table entries */
+            if ((BmpHead->PmColorTable = (PMRGBTRIPLE *)
+                 calloc((size_t) NumColors, sizeof(PMRGBTRIPLE))) ==
+                 (PMRGBTRIPLE *) NULL)
+                return(-1);
+
+            /* Read in the color table one color triple at a time */
+            for (i = 0; i < NumColors; i++)
+            {
+                BmpHead->PmColorTable[i].rgbBlue  = GetByte(FpBmp);
+                BmpHead->PmColorTable[i].rgbGreen = GetByte(FpBmp);
+                BmpHead->PmColorTable[i].rgbRed   = GetByte(FpBmp);
+            }
+        }
+    }
+    else                               /* Windows 3 */
+    if (InfoHeaderSize == 40L)
+    {                              
+        BmpHead->WinInfo.Size          = InfoHeaderSize;
+        BmpHead->WinInfo.Width         = GetDword(FpBmp);
+        BmpHead->WinInfo.Height        = GetDword(FpBmp);
+        BmpHead->WinInfo.Planes        = GetWord(FpBmp);
+        BmpHead->WinInfo.BitCount      = GetWord(FpBmp);
+        BmpHead->WinInfo.Compression   = GetDword(FpBmp);
+        BmpHead->WinInfo.SizeImage     = GetDword(FpBmp);
+        BmpHead->WinInfo.XPelsPerMeter = GetDword(FpBmp);
+        BmpHead->WinInfo.YPelsPerMeter = GetDword(FpBmp);
+        BmpHead->WinInfo.ClrUsed       = GetDword(FpBmp);
+        BmpHead->WinInfo.ClrImportant  = GetDword(FpBmp);
+
+        /* Read in the color table (if any) */
+        if (BmpHead->WinInfo.BitCount != 24 || BmpHead->WinInfo.ClrUsed != 0)
+        {
+            /* Determine number of entries in color table */
+            if (BmpHead->WinInfo.ClrUsed)
+                NumColors = BmpHead->WinInfo.ClrUsed;
+            else
+                NumColors = (WORD) (1U << (BmpHead->WinInfo.Planes *
+                  BmpHead->WinInfo.BitCount));
+
+            /* Allocate memory for the color table entries */
+            if ((BmpHead->WinColorTable = (WINRGBQUAD *)
+                 calloc((size_t) NumColors, sizeof(WINRGBQUAD))) ==
+                 (WINRGBQUAD *) NULL)
+                return(-1);
+      
+            /* Read in the color table one color quad at a time */
+            for (i = 0; i < NumColors; i++)
+            {
+                BmpHead->WinColorTable[i].rgbBlue     = GetByte(FpBmp);
+                BmpHead->WinColorTable[i].rgbGreen    = GetByte(FpBmp);
+                BmpHead->WinColorTable[i].rgbRed      = GetByte(FpBmp);
+                BmpHead->WinColorTable[i].rgbReserved = GetByte(FpBmp);
+            }
+        }
+    }
+    else                               /* OS/2 2.0 */
+    if (InfoHeaderSize == 64L)
+    {                              
+        BmpHead->Pm2Info.Size          = InfoHeaderSize;
+        BmpHead->Pm2Info.Width         = GetDword(FpBmp);
+        BmpHead->Pm2Info.Height        = GetDword(FpBmp);
+        BmpHead->Pm2Info.Planes        = GetWord(FpBmp);
+        BmpHead->Pm2Info.BitCount      = GetWord(FpBmp);
+        BmpHead->Pm2Info.Compression   = GetDword(FpBmp);
+        BmpHead->Pm2Info.SizeImage     = GetDword(FpBmp);
+        BmpHead->Pm2Info.XPelsPerMeter = GetDword(FpBmp);
+        BmpHead->Pm2Info.YPelsPerMeter = GetDword(FpBmp);
+        BmpHead->Pm2Info.ClrUsed       = GetDword(FpBmp);
+        BmpHead->Pm2Info.ClrImportant  = GetDword(FpBmp);
+        BmpHead->Pm2Info.Units         = GetWord(FpBmp);
+        BmpHead->Pm2Info.Reserved      = GetWord(FpBmp);
+        BmpHead->Pm2Info.Recording     = GetWord(FpBmp);
+        BmpHead->Pm2Info.Rendering     = GetWord(FpBmp);
+        BmpHead->Pm2Info.Size1         = GetDword(FpBmp);
+        BmpHead->Pm2Info.Size2         = GetDword(FpBmp);
+        BmpHead->Pm2Info.ColorEncoding = GetDword(FpBmp);
+        BmpHead->Pm2Info.Identifier    = GetDword(FpBmp);
+      
+        /* Read in the color table (if any) */
+        if (BmpHead->Pm2Info.BitCount != 24 || BmpHead->Pm2Info.ClrUsed != 0)
+        {
+            /* Determine number of entries in color table */
+            if (BmpHead->Pm2Info.ClrUsed)
+                NumColors = BmpHead->Pm2Info.ClrUsed;
+            else
+                NumColors = (WORD) (1U << (BmpHead->Pm2Info.Planes *
+                  BmpHead->Pm2Info.BitCount));
+
+            /* Allocate memory for the color table entries */
+            if ((BmpHead->Pm2ColorTable = (PM2RGBQUAD *)
+                 calloc((size_t) NumColors, sizeof(PM2RGBQUAD))) ==
+                 (PM2RGBQUAD *) NULL)
+                return(-1);
+      
+            /* Read in the color table one color quad at a time */
+            for (i = 0; i < NumColors; i++)
+            {
+                BmpHead->Pm2ColorTable[i].rgbBlue     = GetByte(FpBmp);
+                BmpHead->Pm2ColorTable[i].rgbGreen    = GetByte(FpBmp);
+                BmpHead->Pm2ColorTable[i].rgbRed      = GetByte(FpBmp);
+                BmpHead->Pm2ColorTable[i].rgbReserved = GetByte(FpBmp);
+            }
+        }
+    }
+    return(0);
+}
+
+
+
+BMP Header Writer
+
+BMPWRITE.C
+
+This function writes out the headers of a BMP file.  The version of
+the information header may be selected.  The 
+header data is always written in little-endian order.
+
+
+/****************************************************************************\
+**  Title:        BMPWRITE                                                  **
+**  Purpose:      Display the data in a BMP image file header.              **
+**  Version:      1.0                                                       **
+**  Date:         September 1991                                            **
+**  Author:       James D. Murray, Anaheim, CA, USA                         **
+**  C Compilers:  Borland C++ v2.0, Microsoft C v6.00a                      **
+**                                                                          **
+**  This module contains the following function:                            **
+**                                                                          **
+**      WriteBmpHeader - Write a BMP header to a FILE stream.               **
+**                                                                          **
+**  Copyright (C) 1991 Graphics Software Labs.  All rights reserved.        **
+\****************************************************************************/
+#include <stdio.h>
+#include "endianio.h"
+#include "bmp.h"
+
+/* External global variables */
+VOID (*PutWord)(WORD, FILE *);
+VOID (*PutDword)(DWORD, FILE *);
+
+/*
+**  Write a Windows or PM BMP header.
+**
+**  This function reads the information from a BMPHEADER structure
+**  and writes it to a FILE stream in the form of a BMP header.
+**
+**  Returns: Nothing.
+*/
+VOID
+WriteBmpHeader(BmpHead, FpBmp)
+BMPHEADER *BmpHead;     /* Pointer to BMP header structure  */
+FILE      *FpBmp;       /* BMP image file output FILE stream */
+{
+    register SHORT i;   /* Loop counter */
+    WORD  NumColors;    /* Number of colors in color table */
+
+    PutWord  = PutLittleWord;   /* Write using little-endian byte order */
+    PutDword = PutLittleDword;  
+
+    /* Write the bit map file header */
+    PutWord(BmpHead->Header.Type,      FpBmp);
+    PutDword(BmpHead->Header.FileSize, FpBmp);
+    PutWord(BmpHead->Header.Reserved1, FpBmp);
+    PutWord(BmpHead->Header.Reserved2, FpBmp);
+    PutDword(BmpHead->Header.Offset,   FpBmp);
+
+    /*
+    ** Write the bit map information header.
+    **
+    ** The size if the information header indicates if the BMP file
+    ** originated on an MS Windows or OS/2 Presentation Manager system.
+    */
+    if (BmpHead->PmInfo.Size)          /* OS/2 1.x */
+    {
+        PutWord(BmpHead->PmInfo.Size,     FpBmp);
+        PutWord(BmpHead->PmInfo.Width,    FpBmp);
+        PutWord(BmpHead->PmInfo.Height,   FpBmp);
+        PutWord(BmpHead->PmInfo.Planes,   FpBmp);
+        PutWord(BmpHead->PmInfo.BitCount, FpBmp);
+
+        if (BmpHead->PmColorTable)
+        {
+            /* Determine number of entries in color table */
+            NumColors = (WORD) (1U << (BmpHead->PmInfo.Planes *
+              BmpHead->PmInfo.BitCount));
+
+            /* Write the color table one color triple at a time */
+            for (i = 0; i < NumColors; i++)
+            {
+                 PutByte(BmpHead->PmColorTable[i].rgbBlue,  FpBmp);
+                 PutByte(BmpHead->PmColorTable[i].rgbGreen, FpBmp);
+                 PutByte(BmpHead->PmColorTable[i].rgbRed,   FpBmp);
+            }
+        }
+    }
+    else                               /* Windows 3 */
+    if (BmpHead->WinInfo.Size)
+    {                              
+        PutDword(BmpHead->WinInfo.Size,          FpBmp);
+        PutDword(BmpHead->WinInfo.Width,         FpBmp);
+        PutDword(BmpHead->WinInfo.Height,        FpBmp);
+        PutWord(BmpHead->WinInfo.Planes,         FpBmp);
+        PutWord(BmpHead->WinInfo.BitCount,       FpBmp);
+        PutDword(BmpHead->WinInfo.Compression,   FpBmp);
+        PutDword(BmpHead->WinInfo.SizeImage,     FpBmp);
+        PutDword(BmpHead->WinInfo.XPelsPerMeter, FpBmp);
+        PutDword(BmpHead->WinInfo.YPelsPerMeter, FpBmp);
+        PutDword(BmpHead->WinInfo.ClrUsed,       FpBmp);
+        PutDword(BmpHead->WinInfo.ClrImportant,  FpBmp);
+
+        if (BmpHead->WinColorTable)
+        {
+            /* Determine number of entries in color table */
+            if (BmpHead->WinInfo.ClrUsed)
+                NumColors = BmpHead->WinInfo.ClrUsed;
+            else
+                NumColors = (WORD) (1U << (BmpHead->WinInfo.Planes *
+                  BmpHead->WinInfo.BitCount));
+
+            /* Write the color table one color quad at a time */
+            for (i = 0; i < NumColors; i++)
+            {
+                PutByte(BmpHead->WinColorTable[i].rgbBlue,     FpBmp);
+                PutByte(BmpHead->WinColorTable[i].rgbGreen,    FpBmp);
+                PutByte(BmpHead->WinColorTable[i].rgbRed,      FpBmp);
+                PutByte(BmpHead->WinColorTable[i].rgbReserved, FpBmp);
+            }
+        }
+    }
+    else                               /* OS/2 2.0 */
+    if (BmpHead->Pm2Info.Size)
+    {                              
+        PutDword(BmpHead->Pm2Info.Size,          FpBmp);
+        PutDword(BmpHead->Pm2Info.Width,         FpBmp);
+        PutDword(BmpHead->Pm2Info.Height,        FpBmp);
+        PutWord( BmpHead->Pm2Info.Planes,        FpBmp);
+        PutWord( BmpHead->Pm2Info.BitCount,      FpBmp);
+        PutDword(BmpHead->Pm2Info.Compression,   FpBmp);
+        PutDword(BmpHead->Pm2Info.SizeImage,     FpBmp);
+        PutDword(BmpHead->Pm2Info.XPelsPerMeter, FpBmp);
+        PutDword(BmpHead->Pm2Info.YPelsPerMeter, FpBmp);
+        PutDword(BmpHead->Pm2Info.ClrUsed,       FpBmp);
+        PutDword(BmpHead->Pm2Info.ClrImportant,  FpBmp);
+        PutWord( BmpHead->Pm2Info.Units,         FpBmp);
+        PutWord( BmpHead->Pm2Info.Reserved,      FpBmp);
+        PutWord( BmpHead->Pm2Info.Recording,     FpBmp);
+        PutWord( BmpHead->Pm2Info.Rendering,     FpBmp);
+        PutDword(BmpHead->Pm2Info.Size1,         FpBmp);
+        PutDword(BmpHead->Pm2Info.Size2,         FpBmp);
+        PutDword(BmpHead->Pm2Info.ColorEncoding, FpBmp);
+        PutDword(BmpHead->Pm2Info.Identifier,    FpBmp);
+
+        if (BmpHead->Pm2ColorTable)
+        {
+            /* Determine number of entries in color table */
+            if (BmpHead->Pm2Info.ClrUsed)
+                NumColors = BmpHead->Pm2Info.ClrUsed;
+            else
+                NumColors = (WORD) (1U << (BmpHead->Pm2Info.Planes *
+                  BmpHead->Pm2Info.BitCount));
+
+            /* Write the color table one color quad at a time */
+            for (i = 0; i < NumColors; i++)
+            {
+                PutByte(BmpHead->Pm2ColorTable[i].rgbBlue,     FpBmp);
+                PutByte(BmpHead->Pm2ColorTable[i].rgbGreen,    FpBmp);
+                PutByte(BmpHead->Pm2ColorTable[i].rgbRed,      FpBmp);
+                PutByte(BmpHead->Pm2ColorTable[i].rgbReserved, FpBmp);
+            }
+        }
+    }
+}
+
+
+
+BMP File Information Lister
+
+BMPHEAD.C
+
+This useful program displays the information found in the header and
+color table of a BMP file.  It is also a useful 
+example of how to use several of the functions in the BMP library.
+
+
+/****************************************************************************\
+**  Title:        BMPHEAD                                                   **
+**  Purpose:      Display the data in a BMP image file header.              **
+**  Version:      1.0                                                       **
+**  Date:         September 1991                                            **
+**  Author:       James D. Murray, Anaheim, CA, USA                         **
+**  C Compilers:  Borland C++ v2.0, Microsoft C v6.00a                      **
+**                                                                          **
+**  BMPHEAD displays all real information contained within the              **
+**  header of a BMP image file including the array of color map             **
+**  values.                                                                 **
+**                                                                          **
+**  Copyright (C) 1991 James D. Murray.  All rights reserved.               **
+\****************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <conio.h>
+#include "endianio.h"
+#include "bmp.h"
+
+
+int
+main(argc, argv)
+int argc;
+char *argv[];
+{
+    register WORD i;                    /* Loop Counter */
+    BMPHEADER  bmpHead;
+    WORD       NumberColorTableEntries;
+    CHAR       BmpFileName[80];         /* Holder for the BMP image file name */
+    FILE      *fpBmpIn;                 /* File pointer to the BMP image file */
+
+    puts("BMPHEAD - Display the header info within a BMP image file (v1.00)\n");
+
+    /* Check for proper number of command line arguments */
+    if (argc < 2)
+    {
+        fputs("Usage: BMPHEAD filename.bmp\n\n", stderr);
+        exit(-1);
+    }
+
+    /* Add the .bmp extension to the file name if no extension exists */
+    strcpy(BmpFileName, argv[1]);
+    if (!strrchr(argv[1], '.'))
+        strcat(BmpFileName, ".bmp");
+
+    /* Open the BMP image file */
+    if ((fpBmpIn = fopen(BmpFileName, "rb")) == NULL)
+    {
+        fprintf(stderr, "BMPHEAD: Cannot open file %s\n", BmpFileName);
+        exit(-2);
+    }
+
+    /* Read the BMP image file header information */
+    ReadBmpHeader(&bmpHead, fpBmpIn);
+
+    /* Check for FILE stream error */
+    if (ferror(fpBmpIn))
+    {
+        fputs("BMPHEAD: Error reading header information!\n", stderr);
+        exit(-4);
+    }
+
+    /* Check the Identification Type */
+    if (bmpHead.Header.Type != BMP_ID)
+    {
+        fprintf(stderr, "BMPHEAD: %s is not a BMP-format file!\n",
+          BmpFileName);
+        exit(-5);
+    }
+
+    /*
+    ** Display the BMP file information.
+    */
+    printf("            File Type: %x\n",    bmpHead.Header.Type);
+    printf("            File Size: %ld\n",   bmpHead.Header.FileSize);
+    printf("            Reserved1: %d\n",    bmpHead.Header.Reserved1);
+    printf("            Reserved2: %d\n",    bmpHead.Header.Reserved2);
+    printf("    Image Data Offset: %ld\n\n", bmpHead.Header.Offset);
+
+    if (bmpHead.PmInfo.Size)         /* OS/2 1.x bitmap */
+    {
+        printf("   Size of Header: %ld", bmpHead.PmInfo.Size);
+        puts("\t(OS/2 1.x Bitmap)");
+
+        printf("   Width of Image: %d",  bmpHead.PmInfo.Width);
+        puts("\t(in Pixels)");
+
+        printf("  Height of Image: %d",  bmpHead.PmInfo.Height);
+        puts("\t(in Pixels)");
+
+        printf(" Number of Planes: %d",  bmpHead.PmInfo.Planes);
+        puts("\t(Must be 1)");
+
+        printf("   Bits Per Pixel: %d",  bmpHead.PmInfo.BitCount);
+        printf("\t(%ld Colors Total)\n", 1L << (bmpHead.PmInfo.Planes * 
+bmpHead.PmInfo.BitCount));
+    }
+    else
+    if (bmpHead.WinInfo.Size)           /* Windows 3.0 bitmap */
+    {
+        printf("       Size of Header: %ld", bmpHead.WinInfo.Size);
+        puts("\t(Windows 3.0 Bitmap)");
+        printf("       Width of Image: %ld", bmpHead.WinInfo.Width);
+        puts("\t(in Pixels)");
+        printf("      Height of Image: %ld", bmpHead.WinInfo.Height);
+        puts("\t(in Pixels)");
+        printf("     Number of Planes: %d",  bmpHead.WinInfo.Planes);
+        puts("\t(Must be 1)");
+        printf("       Bits Per Pixel: %d",  bmpHead.WinInfo.BitCount);
+        printf("\t(%ld Colors Total)\n", 1L << (bmpHead.WinInfo.Planes * 
+bmpHead.WinInfo.BitCount));
+        printf("          Compression: %ld", bmpHead.WinInfo.Compression);
+        switch (bmpHead.WinInfo.Compression)
+        {
+            case COMPRESS_RGB:
+                puts("\t(No Compression)");
+                break;
+            case COMPRESS_RLE4:
+                puts("\t(4-bits Per Pixel Encoding)");
+                break;
+            case COMPRESS_RLE8:
+                puts("\t(8-bits Per Pixel Encoding)");
+                break;
+            default:
+                puts("\t(Unknown Compression Format)");
+                break;
+        }
+        printf("        Size of Image: %ld", bmpHead.WinInfo.SizeImage);
+        puts("\t(in Bytes)");
+
+        printf("Horizontal Resolution: %ld", bmpHead.WinInfo.XPelsPerMeter);
+        puts("\t(in Pixels Per Meter)");
+
+        printf("  Vertical Resolution: %ld", bmpHead.WinInfo.YPelsPerMeter);
+        puts("\t(in Pixels Per Meter)");
+
+        printf("   Color Indexes Used: %ld", bmpHead.WinInfo.ClrUsed);
+        if (bmpHead.WinInfo.BitCount == 24)
+            puts("\t(No Color Table)");
+        else
+        if (bmpHead.WinInfo.ClrUsed != 0)
+            printf("\t(%lu Entries in Color Table)\n", bmpHead.WinInfo.ClrUsed);
+        else
+            printf("\t(%lu Entries in Color Table)\n",
+              (DWORD) (1U << (bmpHead.WinInfo.Planes * bmpHead.WinInfo.BitCount)));
+
+        printf("     Colors Important: %ld", bmpHead.WinInfo.ClrImportant);
+        if (bmpHead.WinInfo.ClrImportant == 0)
+            printf("\t(All Colors Are Important)");
+        else
+            printf("\t(%ld Colors Are Important)", bmpHead.WinInfo.ClrImportant);
+        fputc('\n', stdout);
+    }
+    else
+    if (bmpHead.PmInfo.Size)         /* OS/2 2.0 bitmap */
+    {
+        printf("       Size of Header: %ld", bmpHead.Pm2Info.Size);
+        puts("\t(OS/2 2.0 Bitmap)");
+        printf("       Width of Image: %ld", bmpHead.Pm2Info.Width);
+        puts("\t(in Pixels)");
+        printf("      Height of Image: %ld", bmpHead.Pm2Info.Height);
+        puts("\t(in Pixels)");
+        printf("     Number of Planes: %d",  bmpHead.Pm2Info.Planes);
+        puts("\t(Must be 1)");
+        printf("       Bits Per Pixel: %d",  bmpHead.Pm2Info.BitCount);
+        printf("\t(%ld Colors Total)\n", 1L << (bmpHead.Pm2Info.Planes * 
+bmpHead.Pm2Info.BitCount));
+        printf("          Compression: %ld", bmpHead.Pm2Info.Compression);
+        switch (bmpHead.Pm2Info.Compression)
+        {
+            case COMPRESS_RGB:
+                puts("\t(No Compression)");
+                break;
+            case COMPRESS_RLE4:
+                puts("\t(4-bits Per Pixel Encoding)");
+                break;
+            case COMPRESS_RLE8:
+                puts("\t(8-bits Per Pixel Encoding)");
+                break;
+            default:
+                puts("\t(Unknown Compression Format)");
+                break;
+        }
+        printf("        Size of Image: %ld", bmpHead.Pm2Info.SizeImage);
+        puts("\t(in Bytes)");
+
+        printf("Horizontal Resolution: %ld", bmpHead.Pm2Info.XPelsPerMeter);
+        puts("\t(in Pixels Per Meter)");
+
+        printf("  Vertical Resolution: %ld", bmpHead.Pm2Info.YPelsPerMeter);
+        puts("\t(in Pixels Per Meter)");
+
+        printf("   Color Indexes Used: %ld", bmpHead.Pm2Info.ClrUsed);
+        if (bmpHead.Pm2Info.BitCount == 24)
+            puts("\t(No Color Table)");
+        else
+        if (bmpHead.Pm2Info.ClrUsed != 0)
+            printf("\t(%lu Entries in Color Table)\n", bmpHead.Pm2Info.ClrUsed);
+        else
+            printf("\t(%lu Entries in Color Table)\n",
+              (DWORD) (1U << (bmpHead.Pm2Info.Planes * bmpHead.Pm2Info.BitCount)));
+
+        printf("     Colors Important: %ld", bmpHead.Pm2Info.ClrImportant);
+        if (bmpHead.Pm2Info.ClrImportant == 0)
+            printf("\t(All Colors Are Important)");
+        else
+            printf("\t(%ld Colors Are Important)", bmpHead.Pm2Info.ClrImportant);
+        fputc('\n', stdout);
+    }
+    else
+    {
+        fputs("BMPHEAD: No BMP information read!\n", stderr);
+        exit(-7);
+    }
+
+
+    /*
+    ** Display the color table (if any).
+    **
+    ** Use ClrUsed to determine the number of entries in the
+    ** color table.  If ClrUsed is 0, then the number of entries
+    ** is calculated using BitCount.  Typically, bitmaps with
+    ** 24-bits per pixel do not have color tables unless ClrUsed
+    ** is non-zero.  All other types of bitmaps (1, 4, or 8-bits per
+    ** pixel) do.
+    */
+
+    /* Display the color table */      /* OS/2 1.x */
+    if (bmpHead.PmInfo.Size && bmpHead.PmInfo.BitCount != 24)
+    {
+        /* Determine the number of RGB entries in the color table */
+        NumberColorTableEntries =
+          (WORD) (1U << (bmpHead.PmInfo.Planes * bmpHead.PmInfo.BitCount));
+
+        fputs("\nHit Enter for color table information...", stdout);
+        getch();
+        putchar('\n');
+
+        printf("\nNumber of Color Table Entries: %u\n\n", NumberColorTableEntries);
+        puts("Color\tRed\tGreen\tBlue");
+
+        for (i = 0; i < NumberColorTableEntries; i++)
+        {
+            printf("%03u\t%03u\t%03u\t%03u\n",
+              i,
+              bmpHead.PmColorTable[i].rgbRed,
+              bmpHead.PmColorTable[i].rgbGreen,
+              bmpHead.PmColorTable[i].rgbBlue);
+
+            if (i && i % 22 == 0)
+            {
+                fputs("Hit Enter for next page...", stdout);
+                getch();        
+                puts("\n\nColor\tRed\tGreen\tBlue\n");
+            }
+        }
+    }
+    else                               /* Windows 3.0 */
+    if (bmpHead.WinInfo.Size && 
+       (bmpHead.WinInfo.BitCount != 24 || bmpHead.WinInfo.ClrUsed != 0))
+    {
+        /* Determine the number of RGB entries in the color table */
+        if (bmpHead.WinInfo.ClrUsed != 0)
+            NumberColorTableEntries = (WORD) bmpHead.WinInfo.ClrUsed;
+        else
+            NumberColorTableEntries =
+              (WORD) (1U << (bmpHead.WinInfo.Planes * bmpHead.WinInfo.BitCount));
+
+        fputs("\nHit Enter for color table information...", stdout);
+        getch();
+        fputc('\n', stdout);
+
+        printf("\nNumber of Color Table Entries: %u\n\n", NumberColorTableEntries);
+
+        puts("Color\tRed\tGreen\tBlue\tReserved\n");
+        for (i = 0; i < NumberColorTableEntries; i++)
+        {
+            printf("%03u\t%03u\t%03u\t%03u\t%03u\n",
+              i,
+              bmpHead.WinColorTable[i].rgbRed,
+              bmpHead.WinColorTable[i].rgbGreen,
+              bmpHead.WinColorTable[i].rgbBlue,
+              bmpHead.WinColorTable[i].rgbReserved);
+
+            if (i && i % 22 == 0)
+            {
+                fputs("Hit Enter for next page...", stdout);
+                getch();        
+                puts("\n\nColor\tRed\tGreen\tBlue\tReserved\n");
+            }
+         }
+    }
+    else                               /* OS/2 2.0 */
+    if (bmpHead.Pm2Info.Size &&
+       (bmpHead.Pm2Info.BitCount != 24 || bmpHead.Pm2Info.ClrUsed != 0))
+    {
+        /* Determine the number of RGB entries in the color table */
+        if (bmpHead.Pm2Info.ClrUsed != 0)
+            NumberColorTableEntries = (WORD) bmpHead.Pm2Info.ClrUsed;
+        else
+            NumberColorTableEntries =
+              (WORD) (1U << (bmpHead.Pm2Info.Planes * bmpHead.Pm2Info.BitCount));
+
+        fputs("\nHit Enter for color table information...", stdout);
+        getch();
+        fputc('\n', stdout);
+
+        printf("\nNumber of Color Table Entries: %u\n\n", NumberColorTableEntries);
+
+        puts("Color\tRed\tGreen\tBlue\tReserved\n");
+        for (i = 0; i < NumberColorTableEntries; i++)
+        {
+            printf("%03u\t%03u\t%03u\t%03u\t%03u\n",
+              i,
+              bmpHead.Pm2ColorTable[i].rgbRed,
+              bmpHead.Pm2ColorTable[i].rgbGreen,
+              bmpHead.Pm2ColorTable[i].rgbBlue,
+              bmpHead.Pm2ColorTable[i].rgbReserved);
+
+            if (i && i % 22 == 0)
+            {
+                fputs("Hit Enter for next page...", stdout);
+                getch();        
+                puts("\n\nColor\tRed\tGreen\tBlue\tReserved\n");
+            }
+         }
+    }
+
+    fclose(fpBmpIn);
+    return(0);
+}
+
+													
+
+
+BMP Run-Length Encoder
+
+BMPENCOD.C
+
+This function encodes raw BMP data into 4-bit or 8-bit BMP RLE data.
+The algorithm always uses encoded runs for pixel runs greater than
+five pixels in length, otherwise raw runs are used.  Delta and end
+of bitmap escape sequences are not included in the encoding.  The
+end of bitmap escape code must be written by the function calling
+BmpEncodeData().
+
+
+/****************************************************************************\
+**  Title:        BMPENCODE                                                 **
+**  Purpose:      Display the data in a BMP image file header.              **
+**  Version:      1.0                                                       **
+**  Date:         September 1991                                            **
+**  Author:       James D. Murray, Anaheim, CA, USA                         **
+**  C Compilers:  Borland C++ v2.0, Microsoft C v6.00a                      **
+**                                                                          **
+**  This module contains the following function:                            **
+**                                                                          **
+**      BmpEncodeScanLine -   **
+**                                                                          **
+**  Copyright (C) 1991 Graphics Software Labs.  All rights reserved.        **
+\****************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "endianio.h"
+#include "bmp.h"
+
+/*
+Read encoded data from a FILE stream and write to a buffer.
+
+Pixels are either 4-bits or 8-bits in size.  The Method parameter
+indcates the size with a value of COMPRESS_RLE4 or COMPRESS_RLE8.
+
+Note that this code only writes absolute runs of pixels that are the same
+value.  Literal runs may just as easily represent a line of pixels with
+different values.
+
+For 4-bit pixels the MSN (Most Significant Nibble) is the first pixel
+value and the LSN (Least Significant Nibble) is the second pixel value.
+This particular algorithm encodes 4-bit per pixel data two nibbles at a time.
+In other words, if you had the raw run "11 11 15" only first four nibbles
+would be encoded in the run.  The fifth nibble would be treated part of
+of the next run.  Not the most efficient scheme, but it
+simplifies the algorithm by not needing to tear apart bytes into sparate
+nibble values and add padding for odd-length pixel runs.  So there.
+
+**  Method may have one of the following values:
+**
+**      0 - Unencoded
+**      1 - Four bits per pixel
+**      2 - Eight bits per pixel
+**
+**
+*/
+SHORT
+BmpEncodeScanLine(EncodedBuffer, BufferSize, LineLength, Method, FpBmp)
+BYTE  *EncodedBuffer;    /* Pointer to buffer to hold encodeded scan line   */
+WORD   BufferSize;       /* Size of buffer holding unencoded data           */
+WORD   LineLength;       /* The length of a scan line in pixels             */
+DWORD  Method;           /* Encoding method to use                          */
+FILE  *FpBmp;            /* FILE pointer to the open input BMP image file   */
+{
+    WORD    runCount;       /* The number of pixels in the current run      */
+    WORD    pixelCount;     /* The number of pixels read from the scan line */
+    SHORT   bufIndex;       /* The index of DecodedBuffer                   */
+    BYTE    pixelValue1;    /* Pixel value read from the scan line (4-byte max) */
+    BYTE    pixelValue2;    /* Pixel value read from the scan line          */
+
+    /* Check that a proper compression method has been specified */
+    if (Method != COMPRESS_RLE4 && Method != COMPRESS_RLE8)
+        return(-1);
+
+    bufIndex   = 0;
+    runCount   = (Method == COMPRESS_RLE4 ? 2 : 1);
+    pixelCount = (Method == COMPRESS_RLE4 ? 2 : 1);
+
+    /* Read in first pixel value */
+    pixelValue1 = GetByte(FpBmp);
+
+    /* Main encoding loop */
+    for (;;)
+    {
+        /* Read in another pixel value */
+        pixelValue2 = GetByte(FpBmp);
+
+        /* Count number of pixels read so far */
+        pixelCount += (Method == COMPRESS_RLE4 ? 2 : 1);
+
+        /* If the pixels are the same then start or continue a run */
+        if (pixelValue1 == pixelValue2)   /* Compare pixels */
+        {
+            /* Advance the run count */
+            runCount += (Method == COMPRESS_RLE4 ? 2 : 1);
+
+            if (runCount < 256)     /* Maximum run-length is 256 pixels     */
+            {
+                if (pixelCount < LineLength)  /* Don't run past end of scan line */
+                    continue;       /* Continue reading the run             */
+            }
+        }
+
+        /*
+        ** If we have gotten this far then we have either come to the end of
+        ** a pixel run, have reached the maximum number of pixels encodable
+        ** in a run, or read to the end of the scan line.  Now encode the
+        ** current run.
+        */
+
+        /*
+        ** Literal runs must have a runCount greater than 2 or the
+        ** literal run indicator will be confused with an escape code.
+        ** This scheme will also only encode even-length runs as literal
+        ** runs.  This frees us from keeping track of left over nibbles
+        ** from odd-length runs.
+        */
+#if 0
+		if (runCount > 2 && runCount < 8 && !(runCount % 2))    /* Write a Literal Run 
+*/
+#endif
+        if (runCount < 0)
+		{
+            /* Make sure writing this next run will not overflow the buffer */
+            if (bufIndex + runCount >= BufferSize - 2)
+                return(-1);
+
+            EncodedBuffer[bufIndex++] = 0;          /* Literal Run indicator  */
+            EncodedBuffer[bufIndex++] = runCount;   /* Number of pixels in run */
+
+            if (Method == COMPRESS_RLE4)
+                runCount /= 2;
+
+            /* Write the pixel data run */
+            while (runCount--)
+                EncodedBuffer[bufIndex++] = pixelValue1;
+        }
+        else                /* Write an Encoded Run */
+        {
+printf("runCount: %d  value %d\n", runCount, pixelValue1);
+            EncodedBuffer[bufIndex++] = runCount;    /* Number of pixels in run */
+            EncodedBuffer[bufIndex++] = pixelValue1; /* Value of pixels in run */
+        }
+
+        /* If we've encoded the entire line then break out of the loop */
+        if (pixelCount == LineLength)
+            break;
+
+        /* Start a new pixel run count  */
+        runCount = (Method == COMPRESS_RLE4 ? 2 : 1);
+
+        /* Store next pixel value run to match */
+        pixelValue1 = pixelValue2;
+    }
+    /* Write an End of Scan Line Escape Code */
+    EncodedBuffer[bufIndex++] = 0;          
+    EncodedBuffer[bufIndex++] = 0;
+
+    return(bufIndex);
+}
+
+
+BMP Run-length Decoder
+
+BMPDECOD.C
+
+This function decodes 4-bit and 8-bit BMP RLE image data.  Note the
+delta escape sequences are not supported because this function can
+only decode one scan line at a time.
+
+
+/****************************************************************************\
+**  Title:        BMPDECODE                                                 **
+**  Purpose:      Display the data in a BMP image file header.              **
+**  Version:      1.0                                                       **
+**  Date:         September 1991                                            **
+**  Author:       James D. Murray, Anaheim, CA, USA                         **
+**  C Compilers:  Borland C++ v2.0, Microsoft C v6.00a                      **
+**                                                                          **
+**  This module contains the following function:                            **
+**                                                                          **
+**  Copyright (C) 1991 Graphics Software Labs.  All rights reserved.        **
+\****************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "endianio.h"
+#include "bmp.h"
+
+
+SHORT
+BmpDecodeScanLine(DecodedBuffer, LineLength, BufferSize, Method, FpBmp)
+BYTE *DecodedBuffer;    /* Pointer to buffer to hold decoded data         */
+WORD  BufferSize;       /* Size of buffer to hold decoded data in bytes   */
+WORD  LineLength;       /* The length of a scan line in pixels            */
+DWORD Method;           /* Data encoding method used on scan line data    */
+FILE *FpBmp;            /* FILE pointer to the open input BMP image file  */
+{
+    BYTE    runCount;       /* Number of pixels in the run  */
+    BYTE    runValue;       /* Value of pixels in the run   */
+    BYTE    Value;          /* Temporary pixel value holder */
+    WORD    bufIndex;       /* The index of DecodedBuffer   */
+
+    /* Check that a proper compression method has been specified */
+    if (Method != COMPRESS_RLE4 && Method != COMPRESS_RLE8)
+        return(-1);
+
+    bufIndex = 0;         /* Initialize the buffer index  */
+    
+    /*
+    ** Subtract 2 bytes from the size of the buffer to save room for
+    ** the end-of-scan-line marker.  The buffer should have two more
+    ** bytes than it need to hold the scan line, of course.
+    */
+    BufferSize -= 2;
+
+    /* Main decoding loop */
+    while (bufIndex < BufferSize)
+    {
+        runCount = GetByte(FpBmp);  /* Number of pixels in the run */
+        runValue = GetByte(FpBmp);  /* Value of pixels in the run  */
+
+        switch(runCount)
+        {
+            case 0:        /* Literal Run or Escape Code */
+                switch(runValue)
+                {
+                    case 0:             /* End of Scan Line Escape Code */
+                        puts("End of scan line Code");
+                    case 1:             /* End of Bitmap Escape Code */
+                        puts("End of bit map Code");
+                        return(bufIndex);
+                    case 2:             /* Delta Escape Code (not supported) */
+                        fputs("Delta Escape Codes not supported!", stderr);
+                        return(-1);
+                    default:            /* Literal Run */
+                        /* Check for a possible buffer overflow */
+                        if (bufIndex + runValue > BufferSize)
+                            return(-2);
+
+                        if (Method == COMPRESS_RLE8)
+                        {
+                            while (runValue--)
+                                DecodedBuffer[bufIndex++] = GetByte(FpBmp);
+                        }
+                        else
+                        if (Method == COMPRESS_RLE4)
+                        {
+                            /*
+                            ** Alternate writing the most-significant and
+                            ** Least-significant nibble to the buffer.  The
+                            ** odd-length literal runs are a bit tricky.
+                            */
+                            while (runValue--)
+                            {
+                                Value = GetByte(FpBmp);
+                                DecodedBuffer[bufIndex] = (MSN(Value) << 4);
+                                if (runValue--)
+                                    DecodedBuffer[bufIndex++] |= LSN(Value);
+                            }
+                        }
+                }
+                break;
+            default:    /* Encoded Run */
+                if (Method == COMPRESS_RLE4)            /* Write a 4-bit value */
+                {
+                    /* Check for a possible buffer overflow */
+                    if (bufIndex + (runCount / 2) > BufferSize)
+                        return(-2);
+
+                    /*
+                    ** Alternate writing the most-significant and
+                    ** Least-significant nibble to the buffer.
+                    */
+                    while (runCount--)
+                    {
+                        DecodedBuffer[bufIndex] = (MSN(runValue) << 4);
+                        if (runCount--)
+                            DecodedBuffer[bufIndex++] |= LSN(runValue);
+                    }
+                }
+                else    /* Write an 8-bit value */
+                {
+printf("bufIndex %d  runCount %d  BufferSize %d\n", bufIndex, runCount, BufferSize);
+                    /* Check for a possible buffer overflow */
+                    if (bufIndex + runCount > BufferSize)
+                       return(-2);
+
+                    while (runCount--)
+                        DecodedBuffer[bufIndex++] = runValue;
+                }
+                break;
+        }
+    }
+    fputs("BMPDECOD: No End of Scan line code!\n", stderr);
+    return(-3);     /* No End-of-Scan Line or End-of-Bitmap code! */
+}
+
+
+
+BMP File Reader and Writer
+
+BMPCODE.C
+
+This code is an example of how to use all the functions in the BMP
+library.  This program will encode and decode BMP files and may
+be modified to change the flavor of a BMP file as well.
+
+
+/****************************************************************************\
+**  Title:        BMPCODE                                                   **
+**  Purpose:      Read, decode, encode, and write a BMP image file.         **
+**  Version:      1.0                                                       **
+**  Date:         September 1991                                            **
+**  Author:       James D. Murray, Anaheim, CA, USA                         **
+**  C Compilers:  Borland C++ v2.0, Microsoft C v6.00a                      **
+**                                                                          **
+**  This program is an example of how to use the BMP library functions to   **
+**  read, write, encode, and decode a BMP image file.  BMP files may be     **
+**  decoded and reencoded using a different encoding scheme or left         **
+**  unencoded (raw).  With a little effort this code could be modified to   **
+**  convert one flavor of BMP image file to another (for example, Windows 3 **
+**  to OS/2 1.x).                                                           **
+**                                                                          **
+**  Copyright (C) 1991 Graphics Software Labs.  All rights reserved.        **
+\****************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "endianio.h"
+#include "bmp.h"
+
+
+int
+main(argc, argv)
+int argc;           /* Number of command line arguments */
+char *argv[];       /* Array of command line arguments  */
+{
+    register WORD i, j;             /* Loop counters                     */
+    FILE         *fpBmpIn;          /* BMP image file input FILE stream  */
+    FILE         *fpBmpOut;         /* BMP image file output FILE stream */
+    BYTE         *buffer;           /* Buffer to hold scan line data     */
+    WORD          bufSize;          /* Size of the scan line buffer      */
+    SHORT         byteCount;        /* Number of bytes in a buffer              */
+    DWORD         compression;      /* Compression value */
+    BMPHEADER     bmpHead;          /* BMP image file header structure   */
+
+    puts("BMPCODE - Decode and recode a BMP image file (v1.00)\n");
+
+    /* Check for proper number of command line arguments */
+    if (argc < 3)
+    {
+        fputs("Usage: BMPHEAD input_filename.bmp output_filename.bmp\n\n",
+          stderr);
+        exit(-1);
+    }
+
+    /* Open the input BMP image file */
+    if ((fpBmpIn = fopen(argv[1], "rb")) == (FILE *) NULL)
+    {
+        fprintf(stderr, "BMPHEAD: Cannot open input file %s\n", argv[1]);
+        exit(-2);
+    }
+
+    /* Open the output BMP image file */
+    if ((fpBmpOut = fopen(argv[2], "wb")) == (FILE *) NULL)
+    {
+        fprintf(stderr, "BMPHEAD: Cannot open output file %s\n", argv[2]);
+        exit(-3);
+    }
+
+    /* Read the BMP image file header information */
+    ReadBmpHeader(&bmpHead, fpBmpIn);
+
+    /* Check for FILE stream error */
+    if (ferror(fpBmpIn))
+    {
+        fputs("BMPHEAD: Error reading header information!\n", stderr);
+        exit(-4);
+    }
+
+    /* Check the Identification Type */
+    if (bmpHead.Header.Type != BMP_ID)
+    {
+        fprintf(stderr, "BMPHEAD: %s is not a BMP-format file!\n", argv[1]);
+        exit(-5);
+    }
+
+    /* Seek to the bitmap data (we should already be at the data) */
+    fseek(fpBmpIn, bmpHead.Header.Offset, SEEK_SET);
+
+    /*
+    ** If the BMP file is unencoded then encode it.  If it's encoded then
+    ** unencode it.  Write out a new BMP image file.
+    */
+    if (bmpHead.WinInfo.Size)   /* Windows 3.x BMP file */
+    {
+        /* Calculate the size of the scan line buffer in bytes */
+        bufSize = (bmpHead.WinInfo.Width * ((bmpHead.WinInfo.BitCount + 7) >> 3) + 2);
+
+        /* Allocate scan line buffer memory */
+        if ((buffer = (BYTE *) calloc(bufSize, sizeof(BYTE))) == (BYTE *) NULL)
+        {
+            fputs("BMPCODE: Error allocating memory.\n", stderr);
+            exit(-7);
+        }
+
+        /* If the BMP file contains compressed image data, then decode it */
+        if (bmpHead.WinInfo.Compression == COMPRESS_RLE4 ||
+            bmpHead.WinInfo.Compression == COMPRESS_RLE8)
+        {
+            printf("Decoding BMP File %s to %s\n", argv[1], argv[2]);
+
+            /* Save compression type */
+            compression = bmpHead.WinInfo.Compression;
+
+            /* Change header to "not compressed" */
+            bmpHead.WinInfo.Compression = COMPRESS_RGB;
+
+            /* Write out the header and color table */
+            WriteBmpHeader(&bmpHead, fpBmpOut);
+
+            /* Check that we are a the image data offset specified in the header before 
+reading */
+            if (ftell(fpBmpIn) != bmpHead.Header.Offset)
+                printf("WARNING: At %ld, should be %ld\n", 
+                    ftell(fpBmpIn), bmpHead.Header.Offset);
+
+            for (i = 0; i < bmpHead.WinInfo.Height; i++)
+            {
+                /* Decode a scan line */
+                if ((byteCount =
+                    BmpDecodeScanLine(buffer, bmpHead.WinInfo.Width,
+                      bufSize, compression, fpBmpIn)) < 0)
+                {
+                    fputs("BMPCODE: Error decoding scan line.\n", stderr);
+                    exit(-8);
+                }
+
+                /* Write the decoded scan line to the output file */
+                for (j = 0; j < byteCount; j++)
+                    PutByte(buffer[j], fpBmpOut);
+            }
+        }
+        else    /* The BMP file contains uncompressed image data */    
+        if (bmpHead.WinInfo.Compression == COMPRESS_RGB &&
+           (bmpHead.WinInfo.BitCount == 4 || bmpHead.WinInfo.BitCount == 8))
+        {
+            printf("Encoding BMP File %s to %s\n", argv[1], argv[2]);
+
+            /* Change header to "compressed" */
+            bmpHead.WinInfo.Compression =
+              (bmpHead.WinInfo.BitCount == 4 ? COMPRESS_RLE4 : COMPRESS_RLE8);
+
+            /* Write out the header and color table */
+            WriteBmpHeader(&bmpHead, fpBmpOut);
+
+            /* Check that we are a the image data offset specified in the header before 
+reading */
+            if (ftell(fpBmpIn) != bmpHead.Header.Offset)
+                printf("WARNING: At %ld, should be %ld\n", 
+                    ftell(fpBmpIn), bmpHead.Header.Offset);
+
+            for (i = 0; i < bmpHead.WinInfo.Height; i++)
+            {
+                /* Encode a scan line */
+                if ((byteCount =
+                   BmpEncodeScanLine(buffer, bmpHead.WinInfo.Width,
+                   bufSize, bmpHead.WinInfo.Compression, fpBmpIn)) < 0)
+                {
+                    fputs("BMPCODE: Error encoding scan line.\n", stderr);
+                    exit(-10);
+                }
+
+                /* Write the Encoded scan line to the output file */
+                for (j = 0; j < byteCount; j++)
+                    PutByte(buffer[j], fpBmpOut);
+            }
+
+            /* Write end-of-bitmap escape code */
+            PutByte(0, fpBmpOut);
+            PutByte(1, fpBmpOut);
+        }
+    }                                       
+    else
+    if (bmpHead.PmInfo.Size)    /* OS/2 1.x BMP file */
+    {
+
+    }
+    else
+    if (bmpHead.Pm2Info.Size)    /* OS/2 2.0 BMP file */
+    {
+
+    }
+
+    fclose(fpBmpIn);
+    fclose(fpBmpOut);
+
+    return(0);      /* Successful termination */
+}
+
