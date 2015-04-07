@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bmptypes.h"
-#include "endian.h"
+#include "endianness.h"
 #include "readbmp.h"
 
 /*****************************************************************************
