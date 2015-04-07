@@ -9,7 +9,7 @@
 //#include <iostream>
 #include "sprtf.hxx"
 #include "utils.hxx"
-#ifndef WIN332
+#ifdef WIN32
 #define ITOA _itoa
 #else
 #define ITOA itoa
