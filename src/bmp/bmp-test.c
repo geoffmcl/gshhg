@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bmptypes.h"
-#include "endian.h"
+#include "endianness.h"
 #include "readbmp.h"
 
 int main (int argc, char *argv[])

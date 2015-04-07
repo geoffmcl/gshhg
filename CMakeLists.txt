@@ -118,14 +118,14 @@ set(dir src/bmp)
 include_directories( ${dir} )
 set(${name}_SRCS
     ${dir}/readbmp.c
-    ${dir}/endian.c
+    ${dir}/endianness.c
     ${dir}/winBMP.cxx
     )
 set(${name}_HDRS
     ${dir}/bmp_utils.hxx
     ${dir}/bmp.h
     ${dir}/bmptypes.h
-    ${dir}/endian.h
+    ${dir}/endianness.h
     ${dir}/readbmp.h
     )
 add_library( ${name} ${${name}_SRCS} ${${name}_HDRS} )

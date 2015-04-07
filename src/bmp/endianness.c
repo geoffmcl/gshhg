@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include "bmptypes.h"
-#include "endian.h"
+#include "endianness.h"
 
 /*****************************************************************************
 *
