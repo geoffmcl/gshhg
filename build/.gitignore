@@ -1,1 +1,16 @@
-xg-tests
+xg-tests/*
+*.vcxproj
+*.filters
+*.user
+CMakeCache.txt
+CMakeFiles/*
+Debug/*
+*.dir/*
+Release/*
+Win32/*
+bldlog-1.txt
+cmake_install.cmake
+*.sln
+ipch/*
+*.sdf
+*.opensdf
