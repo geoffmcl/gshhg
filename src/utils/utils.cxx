@@ -117,11 +117,20 @@ void HexDump(unsigned char *ptr, int length, bool addhdr, bool addascii, bool ad
                 if ( value < 0x10 )
                 {
                     *buffPtr++ = '0';
+#ifdef WIN32
                     ITOA( value, buffPtr++, 16);
+#else
+                    sprintf(buffPtr,"%d",value);
+                    buffPtr++
+#endif
                 }
                 else
                 {
+#ifdef WIN32
                     ITOA( value, buffPtr, 16);
+#else
+                    sprintf(buffPtr,"%d",value);
+#endif
                     buffPtr+=2;
                 }
  
