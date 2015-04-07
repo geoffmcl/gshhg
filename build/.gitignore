@@ -15,3 +15,17 @@ ipch/*
 *.sdf
 *.opensdf
 *.suo
+Makefile
+bmp-1bit
+bmp-test
+bmp_io
+gmt2img
+gshhg
+libbmp_utils.a
+libpng_utils.a
+pgm-test
+tga-test
+write-bmp1
+write-bmp2
+libutils.a
+
