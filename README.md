@@ -34,6 +34,8 @@ This project uses the cmake build file generator.
  2. cmake ..
  3. cmake --build . --config Release
  
+The 'build' directory contains convenient build scripts - build-me.bat and build-me.sh - It should be relatively easy to modify these to suit your particular environment.
+ 
 Of course the cmake GUI can also be used, setting the source directory, and the binary directory to the 'build' folder. And in Windows, the MSVC IDE can be used if this is the chosen generator.
 
 
