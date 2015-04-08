@@ -68,6 +68,13 @@ Reprinted courtesy Dr. Dobb's Journal, (C) 1995.
 This is a good example of crossplatfom bitmap handling, since no Windows API is used,
 and it defines all it own structures.
  
+#### 1. bmp-1bit
+
+Generates a random 1000 x 1000 monchrome bitmap, again NOT using any Windows API. Only optional input is the name of the output random bitmap file.
+
+Is just an example of how to generate a monochrome bitmap, from a randomly generate byte array, in a cross platform way.
+
+
 ### Targa Tests (TGA)
 
 tga-test -

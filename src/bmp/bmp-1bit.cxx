@@ -48,6 +48,7 @@ unsigned char *genImage( int w, int h, int bpp )
            bit = 1;
            offSet = (iy * BytesPerRow) + iByte;
            if (offSet >= BytesSize) {
+               printf("Internal ERROR!\n");
                exit(1);
            }
            while (bitNumber<8) { 
@@ -84,13 +85,13 @@ int writeBMP1bit( const char *file, int w, int h, int bpp, unsigned char *bytes 
     //-----------------------   
     printf("Image width %d, height %d, bpp %d\n", w, h, bpp);
     BytesPerRow = (((Width * bpp)+31)/32)*4; 
-    printf("BytesPerRow= %d\n", BytesPerRow);
+    printf("BytesPerRow = %d\n", BytesPerRow);
     BytesSize = BytesPerRow * Height;
-    printf("BytesSize= %d\n", BytesSize);
+    printf("BytesSize   = %d\n", BytesSize);
     FileSize = FileHeaderSize+InfoHeaderSize+PaletteSize+BytesSize;
-    printf("FileSize= %d\n", FileSize);
+    printf("FileSize    = %d\n", FileSize);
     OffBits= FileHeaderSize+ InfoHeaderSize+ PaletteSize;
-    printf("OffBits= %d\n", OffBits);
+    printf("OffBits     = %d\n", OffBits);
 
     //--------------------------      
     FILE *fp = fopen(file, "wb"); /* b - binary mode */
@@ -141,8 +142,30 @@ int writeBMP1bit( const char *file, int w, int h, int bpp, unsigned char *bytes 
     int w = 1000;
     int h = 1000;
     int bpp = 1;
-    unsigned char *bytes = genImage(w, h, bpp );
-    int iret = writeBMP1bit( out_file, w, h, bpp, bytes );
+    int i;
+    char *arg;
+    int iret;
+    unsigned char *bytes;
+    if (argc < 2) {
+        printf("Generating a random %d x %d monochrome bitmap file,\n", w, h );
+        printf("written to the output '%s'.\n", out_file);
+    } else {
+        for (i = 1; i < argc; i++) {
+            arg = argv[i];
+            if ((*arg == '-')||(*arg == '?')) {
+                printf("Only optional input allowed is the name of an output bmp file.\n");
+                printf("The default output is '%s'\n", out_file);
+                printf("Generates a random %d x %d monochrome bitmap file,\n", w, h );
+                printf("written to the output.\n", out_file);
+                return 1;
+            } else {
+                out_file = arg;
+            }
+        }
+    }
+
+    bytes = genImage(w, h, bpp );
+    iret = writeBMP1bit( out_file, w, h, bpp, bytes );
     free(bytes);
     return iret;
  }
