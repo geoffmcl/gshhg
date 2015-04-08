@@ -51,6 +51,22 @@ A whole bunch of little utilities, all dealing with bitmaps.
  4. Int2BMP
  5. write-bmp1
  6. write-bmp2
+
+#### 1. bmp-test
+
+Test program for reading bitmap files.  It accepts an input file and an
+output file on the command line.  It will read and process the input file
+and dump an ASCII representation of the contents to the output file.  The
+dump will consist of the color image and two masks.  Missing parts will be
+indicated as such (BMP files have no masks and monochrome ICO/PTR files
+have no color data.  In the color image, the dump will be a series of RGB
+values (in hexadecimal).  In the masks, the dump will be represented by "."
+symbols representing zeros and "@" symbols representing ones.
+
+Reprinted courtesy Dr. Dobb's Journal, (C) 1995.
+
+This is a good example of crossplatfom bitmap handling, since no Windows API is used,
+and it defines all it own structures.
  
 ### Targa Tests (TGA)
 

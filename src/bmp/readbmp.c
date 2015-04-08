@@ -710,6 +710,8 @@ int readSingleImageBMP(FILE *fp, RGB **argb, UINT32 *width, UINT32 *height)
     int               rc, depth, inverted;
     long              numColors, numPixels, endPos;
     
+    colorTable = 0;
+    image = 0;
     /*
      * First, get the file header and sanity check it.  The type field must be
      * TYPE_BMP or we're aborting.
