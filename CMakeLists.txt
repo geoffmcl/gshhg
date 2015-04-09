@@ -170,22 +170,22 @@ endif()
 # deal with install 
 # install(TARGETS ${name} DESTINATION bin )
 
-if (WIN32)
-    set(name Int2BMP)
-    set(dir src/bmp)
-    set(${name}_SRCS
-        ${dir}/Int2BMP.cpp
-        )
-    add_executable(${name} ${${name}_SRCS})
-    if(add_LIBS)
-        target_link_libraries( ${name} ${add_LIBS} )
-    endif ()
-    if(WIN32)
-        set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
-    endif()
-    # deal with install 
-    # install(TARGETS ${name} DESTINATION bin )
+set(name Int2BMP)
+set(dir src/bmp)
+set(${name}_SRCS
+    ${dir}/Int2BMP.cpp
+    )
+add_executable(${name} ${${name}_SRCS})
+if(add_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} )
 endif ()
+if(WIN32)
+    set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
+else()
+    set_target_properties( ${name} PROPERTIES COMPILE_FLAGS "-std=c++11")
+endif()
+# deal with install 
+# install(TARGETS ${name} DESTINATION bin )
 
 # =========================================================
 # from : http://paulbourke.net/dataformats/bmp/

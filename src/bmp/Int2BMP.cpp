@@ -5,9 +5,9 @@
 // NOT USING pecompile headers!!! #include "stdafx.h"
 #ifdef _MSC_VER
 #include <SDKDDKVer.h>
+#include <tchar.h>
 #endif
 #include <stdio.h>
-#include <tchar.h>
 #include <cstdint>
 #include <iostream>
 #include <fstream>
@@ -114,7 +114,8 @@ void MakeIntegerFile( const std::string& integerFilename )
 }
 #endif // 0 - no 'random' file
 
-int _tmain(int argc, _TCHAR* argv[])  //Replace with int main( int argc, char* argv[] ) if you're not under Visual Studio
+// int _tmain(int argc, _TCHAR* argv[])  //Replace with int main( int argc, char* argv[] ) if you're not under Visual Studio
+int main( int argc, char* argv[] )
 {
     //Assumption: 32-bit signed integers
     //Assumption: Distribution of values range from INT32_MIN through INT32_MAX, inclusive
