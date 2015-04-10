@@ -171,6 +171,27 @@ Of course it could be quite easily cast into a library to attach to your own app
 The important thing is that it is quite crossplatform, having NO dependency on the
 windows GDI header files.
 
+#### 4. Int2BMP
+
+Again a cross-platform bitmap implmentation, using a class to build the bitmap.
+
+Will read the in_file as an array of integers, space separated,
+values range from INT32_MIN through INT32_MAX
+and write a bitmap file, in uncompressed BI_RGB format.
+The width and height of the image is assumed to be the sqrt of
+the total number of integers found in the input.
+A non-rectangular numbers of integers yield non-rectangular bitmaps (final scanline may be short)
+This may cause some .bmp parsers to fail; others may pad with 0's.  For simplicity,
+this implementation attempts to render square bitmaps.
+
+In essence is a SIMPLE example of converting an array of integers to a BMP
+ See http://stackoverflow.com/questions/12200201/c-convert-text-file-of-integers-into-a-bitmap-image-file-in-bmp-format
+for the original code. And as pointed out in that post, this is close to converting a PPM file
+to a BMP file, and would not take much effort to modify it to do that.
+
+#### 5. write-bmp1
+
+#### 6. write-bmp2
 
 ### Targa Tests (TGA)
 
