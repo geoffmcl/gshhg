@@ -111,6 +111,23 @@ int main( int argc, char **argv)
     unsigned char v;
     int min_c = 9999999;
     int max_c = 0;
+
+    for (w = 1; w < argc; w++) {
+        char *arg = argv[w];
+        c = *arg;
+        if (c == '-') {
+            printf("\n%s only takes one argument, the name of an output bitmap file\n",argv[0]);
+            printf("Given an such an output file name, it will generate a random %d x %d x %d color\n", width, height, color);
+            printf("array, and write that array as a 24-bit bitmap file using a crossplatform service like\n");
+            printf("int write_bmp( int w, int h, char *file )\n");
+
+            return 1;
+        }
+    }
+    if (argc < 2) {
+        printf("Error: Give the name of the output bmp file!\n");
+        return 1;
+    }
     printf("Generating random values...\n");
     memset(&counts,0,sizeof(counts));
     srand( (unsigned)time( NULL ) );
@@ -143,16 +160,16 @@ int main( int argc, char **argv)
         if(h) printf("\n");
     }
 
-    if (argc < 2) {
-        printf("Give the name of the output random bmp!\n");
-        return 1;
-    }
     printf("Writing bitmap to file %s\n", argv[1]);
     std::ofstream stream;
     stream.open( argv[1], std::ofstream::binary ); 
+    if (stream.fail() || stream.bad() || !stream.is_open()) {
+        printf("Error: Failed to create/open output '%s'!\n", argv[1]);
+        return 1;
+    }
     write_bmp( stream );
     stream.close();
-    printf("Written bitmap to file %s\n", argv[1]);
+    printf("Written bitmap to file '%s'\n", argv[1]);
 
 	return iret;
 }

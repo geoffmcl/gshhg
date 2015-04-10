@@ -191,7 +191,16 @@ to a BMP file, and would not take much effort to modify it to do that.
 
 #### 5. write-bmp1
 
+This program does nothing. Just contains sample code 
+void write_bmp( int w, int h, char *file )
+Again a cross-platform bitmap implmentation
+
 #### 6. write-bmp2
+
+Like the above does practically nothing. It generates a random 512 x 256 3 color array,
+and if an output file name is given on the command line, will write a 24-bit RGB bitmap,
+using something similar to the above write_bmp service.
+Again a cross-platform bitmap implmentation
 
 ### Targa Tests (TGA)
 
