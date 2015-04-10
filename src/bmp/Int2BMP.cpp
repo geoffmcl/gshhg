@@ -15,6 +15,8 @@
 #ifdef _MSC_VER
 #include <SDKDDKVer.h>
 #include <tchar.h>
+#else
+#include <string.h> // for strlen, ...
 #endif
 #include <stdio.h>
 #include <cstdint>
@@ -120,7 +122,7 @@ void MakeIntegerFile( const std::string& integerFilename )
     int range_max = INT32_MAX / 2;
     for( size_t i = 0; i < intCount; ++i ) {
         // buffer[ i ] = rand(); // 0 to RAND_MAX (32767)
-        num = (int)((double)rand() / (RAND_MAX + 1) * (range_max - range_min) + range_min);
+        num = (int)((double)rand() / ((double)RAND_MAX + 1) * (range_max - range_min) + range_min);
         buffer[ i ] = num;
     }
 

@@ -121,14 +121,19 @@ int main( int argc, char **argv)
                 waterfall[w][h][c] = v;
                 if (v < 256)
                     counts[c]++;
+                if (v > max_c)
+                    max_c = v;
+                if (v < min_c)
+                    min_c = v;
             }
         }
     }
+    printf("Range of values min %d to max %d\n", min_c, max_c );
     if (show_rand) {
         printf("Counts of values in array...\n");
         h = 0;
         for (w = 0; w < 256; w++) {
-            printf("#%3d %3d ", w, counts[w]);
+            printf("#%3d %3ld ", w, counts[w]);
             h++;
             if (h >= 8) {
                 printf("\n");
