@@ -19,6 +19,8 @@ set( LIB_TYPE STATIC )  # set default static
 option( BUILD_SHARED_LIB "Build Shared Library" OFF )
 # EXPERIMENTAL - Turn ON to combine library into EXE - above shared library MUST be OFF
 option( BUILD_AS_ONE "Build as one. Combine library into EXE" OFF )
+option( BUILD_GMT2IMG "Set ON to build gmt2img example."      OFF )
+option( BUILD_HDFDATA "Set ON to build hdfdata example."      OFF )
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set( WARNING_FLAGS -Wall )
@@ -83,6 +85,7 @@ if (PNG_FOUND)
     include_directories(${PNG_INCLUDE_DIRS})
     list(APPEND add_LIBS ${PNG_LIBRARIES})
     message(STATUS "*** Version ${PNG_VERSION_STRING} defs ${PNG_DEFINITIONS}")
+    add_definitions( -DUSE_PNG_LIB )
 else ()
     message(STATUS "*** PNG (or ZLIB) NOT found!")
 endif ()
@@ -296,8 +299,54 @@ endif()
 # deal with install 
 # install(TARGETS ${name} DESTINATION bin )
 
+if (BUILD_GMT2IMG OR BUILD_HDFDATA)
+    #   HDF5_FOUND - true if HDF5 was found on the system
+    #   HDF5_INCLUDE_DIRS - Location of the hdf5 includes
+    #   HDF5_DEFINITIONS - Required compiler definitions for HDF5
+    #   HDF5_LIBRARIES - Required libraries for all requested bindings
+    #   HDF5_LIBRARY_DIRS - the full set of library directories
+    #   HDF5_C_LIBRARIES - Required libraries for the HDF5 C bindings.
+    #   HDF5_CXX_LIBRARIES - Required libraries for the HDF5 C++ bindings
+    #   HDF5_HL_LIBRARIES - Required libraries for the HDF5 high level API
+    find_package(HDF5 COMPONENTS C CXX HL TOOLS)
+    #find_package(HDF5)
+endif ()
+
+if (HDF5_FOUND)
+    message(STATUS "*** Found HDF5 libs ${HDF5_LIBRARIES} inc ${HDF5_INCLUDE_DIR}")
+    include_directories( ${HDF5_INCLUDE_DIR} )
+    list(APPEND add_LIBS ${HDF5_LIBRARIES})
+    if (HDF5_DEFINITIONS)
+        message(STATUS "*** Check HDF5 definitiona ${HDF5_DEFINITIONS}")
+    endif ()
+    if (BUILD_HDFDATA)
+        message(STATUS "*** Build HDFDATA is ON")
+        set(name hdfData)
+        set(dir src/gmt)
+        set(${name}_SRCS
+            ${dir}/${name}.cxx
+            )
+        set(${name}_HDRS
+            ${dir}/${name}.hxx
+            )
+        add_executable(${name} ${${name}_SRCS} ${${name}_HDRS})
+        if(add_LIBS)
+            target_link_libraries( ${name} ${add_LIBS} )
+        endif ()
+        if(MSVC)
+            set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
+        endif()
+        # deal with install 
+        # install(TARGETS ${name} DESTINATION bin )
+    else ()
+        message(STATUS "*** Build HDFDATA is OFF")
+    endif ()
+else ()
+    message(STATUS "*** HDF5 NOT found")
+endif ()
+
 #################################################
-if (PNG_FOUND)
+if (PNG_FOUND AND HDF5_FOUND AND BUILD_GMT2IMG)
     ### GMT ASCII to image
     set(name gmt2img)
     set(dir src/gmt)
@@ -314,6 +363,7 @@ if (PNG_FOUND)
     # deal with install 
     # install(TARGETS ${name} DESTINATION bin )
     #################################################
+    
 endif ()
 
 ###################################################################
