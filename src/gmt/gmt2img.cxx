@@ -18,7 +18,7 @@
 #define MAX_PATH 260
 #endif
 
-#define DO_DEBUG
+//#define DO_DEBUG
 //static const char *def_file = "C:\\Users\\user\\Downloads\\GSHHS_shp\\NOAA\\15487.dat";
 static const char *def_file = "gshhs.csv";
 #define MX_LINE 256
