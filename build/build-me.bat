@@ -39,7 +39,7 @@
 @goto RPT
 :GOTCMD
 
-@echo Begin %TMPBGN% > %TMPLOG%
+@echo Building %TMPPRJ% begin %TMPBGN% > %TMPLOG%
 @echo All output to %TMPLOG%...
 
 @REM echo Set ENV BOOST_ROOT=%BOOST_ROOT% >> %TMPLOG%
