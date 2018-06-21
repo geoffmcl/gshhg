@@ -312,7 +312,7 @@ if (BUILD_GMT2IMG OR BUILD_HDFDATA)
     #find_package(HDF5)
 endif ()
 
-if (HDF5_FOUND)
+if (HDF5_FOUND AND HDF5_hdf5_cpp_LIBRARY AND HDF5_hdf5_tools_LIBRARY)
     message(STATUS "*** Found HDF5 libs ${HDF5_LIBRARIES} inc ${HDF5_INCLUDE_DIR}")
     include_directories( ${HDF5_INCLUDE_DIR} )
     list(APPEND add_LIBS ${HDF5_LIBRARIES})
