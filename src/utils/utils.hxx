@@ -22,6 +22,8 @@ extern int in_world_range(double lat, double lon);
 #define M_IS_DIR S_IFDIR
 #endif
 
+// return The distance between the two points in kilometers
+extern double distanceEarth(double lat1d, double lon1d, double lat2d, double lon2d);
 
 #ifdef __cplusplus
 }
