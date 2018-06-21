@@ -61,6 +61,13 @@ using namespace std;
 #define SPRTF printf
 #endif
 
+#ifndef GSHHG_VERSION
+#define GSHHG_VERIONS "No version"
+#endif
+#ifndef GSHHG_DATE
+#define GSHHG_DATE "Unknown Date"
+#endif
+
 typedef struct tagPointD {	/* Each lon, lat pair is stored in micro-degrees in 4-byte integer format */
 	double x, y;
 }PointD, *PPointD;
@@ -68,6 +75,8 @@ typedef struct tagPointD {	/* Each lon, lat pair is stored in micro-degrees in 4
 typedef std::vector<PointD> vPTS;
 
 static const char *module = "gshhg";
+static const char *gshhg_version = GSHHG_VERSION;
+static const char *gshhg_date = GSHHG_DATE;
 
 #ifdef WORDS_BIGENDIAN
 static const bool must_swab = false;
@@ -124,36 +133,41 @@ bool in_bbox( double lat, double lon )
     return true;
 }
 
+void show_version()
+{
+    SPRTF("%s version %s, date %s\n", module, gshhg_version, gshhg_date);
+}
 
 void give_help( char *name )
 {
 #define INDENT "    "
     SPRTF("\n");
-    SPRTF(INDENT"%s [options] in_gshhg_file\n", module );
+    show_version();
+    SPRTF(INDENT "%s [options] in_gshhg_file\n", module );
     SPRTF("\n");
-    SPRTF(INDENT"Options:\n");
-    SPRTF(INDENT" --help    (-h or -?) = This help and exit(2)\n");
-    SPRTF(INDENT" --v[vvv]   or -v[nn] = Bump or set verbosity (def=%d)\n", verbosity);
-    SPRTF(INDENT" --bbox <bbox>   (-b) = Only ouput the points in this bbox.\n");
-    SPRTF(INDENT" --fudge <degs>  (-f) = Expand the bounding by by this 'fudge' factor. (def=%lf)\n", fudge );
-    SPRTF(INDENT" --whole         (-w) = Add whole feature if a single point is in this box.\n");
-    SPRTF(INDENT" --xg <file>     (-x) = Set xg output file. 'none' for no xg. (def=%s)\n",
+    SPRTF(INDENT "Options:\n");
+    SPRTF(INDENT " --help    (-h or -?) = This help and exit(2)\n");
+    SPRTF(INDENT " --v[vvv]   or -v[nn] = Bump or set verbosity (def=%d)\n", verbosity);
+    SPRTF(INDENT " --bbox <bbox>   (-b) = Only ouput the points in this bbox.\n");
+    SPRTF(INDENT " --fudge <degs>  (-f) = Expand the bounding by by this 'fudge' factor. (def=%lf)\n", fudge );
+    SPRTF(INDENT " --whole         (-w) = Add whole feature if a single point is in this box.\n");
+    SPRTF(INDENT " --xg <file>     (-x) = Set xg output file. 'none' for no xg. (def=%s)\n",
         (out_file ? out_file : "none") ); 
-    SPRTF(INDENT" --display       (-d) = Display headers only. Implies verbosity. (def=%s)\n",
+    SPRTF(INDENT " --display       (-d) = Display headers only. Implies verbosity. (def=%s)\n",
         (headers_only ? "on" : "off") );
-    SPRTF(INDENT" --log <file>    (-l) = Set the log file. (def=%s)\n", log_file);
+    SPRTF(INDENT " --log <file>    (-l) = Set the log file. (def=%s)\n", log_file);
     SPRTF("\n");
-    SPRTF(INDENT"Notes:\n");
-    SPRTF(INDENT" Verbosity points are 0, 1, 2, 5, and 9 for all messages.\n");
-    SPRTF(INDENT" If -w not given, output if 2 or more consecutive points are within the bbox. (def=%s)\n",
+    SPRTF(INDENT "Notes:\n");
+    SPRTF(INDENT " Verbosity points are 0, 1, 2, 5, and 9 for all messages.\n");
+    SPRTF(INDENT " If -w not given, output if 2 or more consecutive points are within the bbox. (def=%s)\n",
         (whole_features ? "on" : "off") );
-    SPRTF(INDENT" The bbox = min_lon,min_lat,max_lon,max_lat. Separated by any non-digit char.\n");
-    SPRTF(INDENT" The xg file is a small subset of XGraph 2D display, as can be viewed\n");
-    SPRTF(INDENT" by https://sites.google.com/site/polyview2d/\n");
-    SPRTF(INDENT" All output is written to both stdout, and the log file.\n");
+    SPRTF(INDENT " The bbox = min_lon,min_lat,max_lon,max_lat. Separated by any non-digit char.\n");
+    SPRTF(INDENT " The xg file is a small subset of XGraph 2D display, as can be viewed\n");
+    SPRTF(INDENT " by https://sites.google.com/site/polyview2d/\n");
+    SPRTF(INDENT " All output is written to both stdout, and the log file.\n");
     SPRTF("\n");
-    SPRTF(INDENT"Will extract all points from the gshhs bin file, and write the results\n");
-    SPRTF(INDENT"to the xg file for viewing.\n");
+    SPRTF(INDENT "Will extract all points from the gshhs bin file, and write the results\n");
+    SPRTF(INDENT "to the xg file for viewing.\n");
     SPRTF("                                                     Happy data extraction.\n");
 }
 
@@ -308,6 +322,10 @@ int parse_args( int argc, char **argv )
         i2 = i + 1;
         arg = argv[i];
         if (*arg == '-') {
+            if (strcmp(arg, "--version") == 0) {
+                show_version();
+                return 2;
+            }
             sarg = &arg[1];
             while (*sarg == '-') sarg++;
             c = *sarg;
@@ -426,10 +444,14 @@ int main( int argc, char **argv )
     bool inbbox = false;
     const char *title = "    id points lvso       area     f_area       west       east     south     north contai ancest";
     int iret = parse_args(argc,argv);
-    if (iret)
+    if (iret) {
+        if (iret == 2)
+            iret = 0;
         return iret;
+    }
     if (in_file == 0) {
-        SPRTF("%s: No input file found in command! Aborting...\n", module );
+        give_help(argv[0]);
+        SPRTF("%s: ERROR: No input file found in command! Aborting...\n", module );
         return 1;
     }
     FILE *fp = fopen(in_file,"rb");

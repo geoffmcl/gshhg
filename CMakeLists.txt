@@ -10,9 +10,54 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 project( gshhg )
 
 # The version number.
-set( gshhg_MAJOR 3 )
-set( gshhg_MINOR 0 )
-set( gshhg_POINT 0 )
+#------------------------------------------------------------------------
+# Release Information
+#   Release version and date are found in `version.txt`; update *that*
+#   file when required. It will be read into variable `versionFile`
+#   (stripping any newlines or spaces). This file must be formatted into
+#   two lines: the dot-separated MAJOR.MINOR.POINT version, followed by
+#   the date separated YEAR.MONTH.DAY release date.
+#------------------------------------------------------------------------
+file(READ version.txt versionFile)
+if (NOT versionFile)
+    message(FATAL_ERROR "Unable to determine gshhg version. version.txt file is missing.")
+endif()
+string(STRIP "${versionFile}" VERSION_TEXT)
+string(REGEX REPLACE "(.*)[\r\n|\n](.*)" "\\1" GSHHG_VERSION ${VERSION_TEXT})
+string(REGEX REPLACE "(.*)[\r\n|\n](.*)" "\\2" GSHHG_DATE ${VERSION_TEXT})
+
+# Establish version number
+if (GSHHG_VERSION)
+    string(REPLACE "." ";" VERSION_LIST ${GSHHG_VERSION})
+    list(GET VERSION_LIST 0 GSHHG_MAJOR_VERSION)
+    list(GET VERSION_LIST 1 GSHHG_MINOR_VERSION)
+    list(GET VERSION_LIST 2 GSHHG_POINT_VERSION)
+else ()
+    message(FATAL_ERROR "*** FAILED to get a VERSION from version.txt!")
+endif ()   
+ 
+# Establish version date
+if (GSHHG_DATE)
+    string(REPLACE "." ";" DATE_LIST ${GSHHG_DATE})
+    list(GET DATE_LIST 0 GSHHG_YEAR)
+    list(GET DATE_LIST 1 GSHHG_MONTH)
+    list(GET DATE_LIST 2 GSHHG_DAY)
+else ()
+    message(FATAL_ERROR "*** FAILED to get a DATE from version.txt!")
+endif ()
+
+#------------------------------------------------------------------------
+# Macro Values
+#   These additional macros are set in GSHHG's source code. It is *very*
+#   seldom that you would ever have to change any of these in order to
+#   achieve a functioning build.
+#------------------------------------------------------------------------
+add_definitions ( -DGSHHG_VERSION="${GSHHG_VERSION}" )
+add_definitions ( -DGSHHG_DATE="${GSHHG_YEAR}/${GSHHG_MONTH}/${GSHHG_DAY}" )
+# Optionally specify an extra version point for pre-release/debug versions.
+if (GSHHG_RC_NUMBER)
+    add_definitions ( -DGSHHG_RC_NUMBER="${GSHHG_RC_NUMBER}" )
+endif ()
 
 # Allow developer to select is Dynamic or static library built
 set( LIB_TYPE STATIC )  # set default static
