@@ -13,6 +13,8 @@
 #define ITOA _itoa
 #else
 #define ITOA itoa
+#define _USE_MATH_DEFINES
+#include <cmath>
 #endif
 
 using namespace std;
