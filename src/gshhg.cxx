@@ -1,7 +1,7 @@
 /*\
  * gshhg.cxx
  *
- * Copyright (c) 2015 - Geoff R. McLane
+ * Copyright (c) 2015 - 2019 - Geoff R. McLane
  * Licence: GNU GPL version 2
  *
  * from : http://www.soest.hawaii.edu/pwessel/gshhg/
@@ -89,7 +89,8 @@ static const char *in_file = 0;
 static const char *out_file = "templist.xg";
 static const char *out_color = "blue";
 static double fudge = 0.0;
-
+static bool add_boundary = true;
+static const char *bnd_color = "gray";
 static int verbosity = 0;
 
 #define VERB1 (verbosity >= 1)
@@ -479,6 +480,16 @@ int main( int argc, char **argv )
         xg << header;
         if (VERB1)
             SPRTF("%s",header);
+        if (add_boundary)
+        {
+            xg << "color " << bnd_color << std::endl; // boundary in gray
+            xg << min_lon << " " << min_lat << "# BL" << std::endl;
+            xg << min_lon << " " << max_lat << "# TL" << std::endl;
+            xg << max_lon << " " << max_lat << "# TR" << std::endl;
+            xg << max_lon << " " << min_lat << "# BR" << std::endl;
+            xg << min_lon << " " << min_lat << "# BL" << std::endl;
+            xg << "NEXT" << std::endl;
+        }
     }
     xg << "color " << out_color << std::endl; // outline in blue
     //////////////////////////////////////////////////////////////
