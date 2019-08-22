@@ -114,7 +114,32 @@ if (WORDS_BIGENDIAN)
     message(STATUS "*** Running on a BIGENDIAN CPU")
 else ()
     message(STATUS "*** Running on a LITTLEENDIAN CPU")
-endif ()    
+endif ()
+
+#------------------------------------------------------------------------
+# Static Windows Runtime
+#   Option to statically link to the Windows runtime. Maybe only 
+#   applies to WIN32/MSVC.
+#------------------------------------------------------------------------
+if (MSVC)
+    option( USE_STATIC_RUNTIME "Set ON to change /MD(DLL) to /MT(static)" OFF )
+    if (USE_STATIC_RUNTIME)
+        set(CompilerFlags
+            CMAKE_CXX_FLAGS
+            CMAKE_CXX_FLAGS_DEBUG
+            CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_C_FLAGS
+            CMAKE_C_FLAGS_DEBUG
+            CMAKE_C_FLAGS_RELEASE
+            )
+        foreach(CompilerFlag ${CompilerFlags})
+            string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+        endforeach()    
+        message(STATUS "Using /MT STATIC runtime")
+    else ()
+        message(STATUS "Using /MD DYNAMIC runtime")
+    endif ()
+endif ()
 
 # PNG_FOUND If false, do not try to use PNG.
 # PNG_INCLUDE_DIRS  where to find png.h, etc.
