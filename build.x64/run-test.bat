@@ -16,7 +16,13 @@
 @set MAXLAT=49.01
 @set MINLON=2.55
 @set MAXLON=113.92
+@REM for better VHHH LFPG spread - and note -B (caps) to add Bnds
+@set MINLAT=18
+@set MAXLAT=53
+@set MINLON=1
+@set MAXLON=118
 
+@set TMPBBOX=%MINLON%,%MINLAT%,%MAXLON%,%MAXLAT%
 @set TMPXG=temp-VH-PG-c.xg
 @REM set TMPXG=temp-VH-PG-f.xg
 @REM set TMPXG=temp-Y-Lb-f.xg
@@ -31,9 +37,7 @@
 @set TMPEXE=Release\gshhg.exe
 @if NOT EXIST %TMPEXE% goto NOEXE
 
-@set TMPBBOX=%MINLON%,%MINLAT%,%MAXLON%,%MAXLAT%
-
-%TMPEXE% -x %TMPXG% -b %TMPBBOX% %TMPGSHHG% %*
+%TMPEXE% -x %TMPXG% -B %TMPBBOX% %TMPGSHHG% %*
 
 @goto END
 
