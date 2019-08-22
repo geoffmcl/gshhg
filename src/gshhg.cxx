@@ -89,7 +89,7 @@ static const char *in_file = 0;
 static const char *out_file = "templist.xg";
 static const char *out_color = "blue";
 static double fudge = 0.0;
-static bool add_boundary = true;
+static bool add_boundary = false;
 static const char *bnd_color = "gray";
 static int verbosity = 0;
 
@@ -149,7 +149,7 @@ void give_help( char *name )
     SPRTF(INDENT "Options:\n");
     SPRTF(INDENT " --help    (-h or -?) = This help and exit(2)\n");
     SPRTF(INDENT " --v[vvv]   or -v[nn] = Bump or set verbosity (def=%d)\n", verbosity);
-    SPRTF(INDENT " --bbox <bbox>   (-b) = Only ouput the points in this bbox.\n");
+    SPRTF(INDENT " --bbox <bbox>   (-b) = Only ouput the points in this bbox. -B to add boundary.\n");
     SPRTF(INDENT " --fudge <degs>  (-f) = Expand the bounding by by this 'fudge' factor. (def=%lf)\n", fudge );
     SPRTF(INDENT " --whole         (-w) = Add whole feature if a single point is in this box.\n");
     SPRTF(INDENT " --xg <file>     (-x) = Set xg output file. 'none' for no xg. (def=%s)\n",
@@ -337,9 +337,12 @@ int parse_args( int argc, char **argv )
                 return 2;
                 break;
             case 'b':
+            case 'B':
                 if (i2 < argc) {
                     i++;
                     sarg = argv[i];
+                    if (c == 'B')
+                        add_boundary = true;
                     if (get_bbox(sarg)) {
                         if (VERB1) SPRTF("%s: Set BBOX to '%s'\n", module, sarg);
                     } else {
@@ -483,11 +486,11 @@ int main( int argc, char **argv )
         if (add_boundary)
         {
             xg << "color " << bnd_color << std::endl; // boundary in gray
-            xg << min_lon << " " << min_lat << "# BL" << std::endl;
-            xg << min_lon << " " << max_lat << "# TL" << std::endl;
-            xg << max_lon << " " << max_lat << "# TR" << std::endl;
-            xg << max_lon << " " << min_lat << "# BR" << std::endl;
-            xg << min_lon << " " << min_lat << "# BL" << std::endl;
+            xg << min_lon << " " << min_lat << " # BL" << std::endl;
+            xg << min_lon << " " << max_lat << " # TL" << std::endl;
+            xg << max_lon << " " << max_lat << " # TR" << std::endl;
+            xg << max_lon << " " << min_lat << " # BR" << std::endl;
+            xg << min_lon << " " << min_lat << " # BL" << std::endl;
             xg << "NEXT" << std::endl;
         }
     }
