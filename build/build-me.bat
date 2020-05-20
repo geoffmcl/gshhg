@@ -2,10 +2,10 @@
 @set TMPBGN=%TIME%
 
 @set TMPPRJ=gshhg
-@echo Setup for 32-bit %TMPROJ% build
+@echo Setup for 64-bit %TMPROJ% build
 @set TMPLOG=bldlog-1.txt
 @set TMPSRC=..
-@set TMP3RD=F:\Projects\software
+@set TMP3RD=D:\Projects\3rdParty.x64
 @REM set BOOST_ROOT=X:\install\msvc100\boost
 @REM if NOT EXIST %BOOST_ROOT%\nul goto NOBOOST
 
@@ -19,7 +19,7 @@
 @REM ###########################################
 @REM NOTE: Specific install location
 @REM ###########################################
-@set TMPINST=F:\Projects\software
+@set TMPINST=%TMP3RD%
 @REM ###########################################
 
 @REM Nothing below need be touched..

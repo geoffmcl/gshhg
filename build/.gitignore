@@ -29,4 +29,6 @@ write-bmp1
 write-bmp2
 libutils.a
 Int2BMP
+x64/*
+*.xg
 
