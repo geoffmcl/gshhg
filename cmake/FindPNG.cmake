@@ -35,7 +35,7 @@
 if(PNG_FIND_QUIETLY)
   set(_FIND_ZLIB_ARG QUIET)
 endif(PNG_FIND_QUIETLY)
-find_package(ZLIB2 ${_FIND_ZLIB_ARG})
+find_package(ZLIB ${_FIND_ZLIB_ARG})
 
 if (ZLIB_FOUND)
   find_path(PNG_PNG_INCLUDE_DIR png.h

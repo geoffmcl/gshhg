@@ -1,6 +1,6 @@
 # @0140929 - GSHHG Project - http://www.soest.hawaii.edu/pwessel/gshhg/
 # CMakeLists.txt, generated gencmake.pl, on 2014/09/28 18:01:17
-cmake_minimum_required( VERSION 2.8.8 )
+cmake_minimum_required( VERSION 3.6 )
 
 include (TestBigEndian)
 
@@ -148,8 +148,7 @@ endif ()
 #   that includes png library files.
 # PNG_VERSION_STRING the version of the PNG library found (since CMake 2.8.8)
 # PNG_LIBRARY where to find the PNG library.
-#find_package(PNG)
-find_package(PNG2)
+find_package(PNG)
 if (PNG_FOUND)
     message(STATUS "*** Found PNG (and ZLIB) inc ${PNG_INCLUDE_DIRS} lib ${PNG_LIBRARIES}")
     include_directories(${PNG_INCLUDE_DIRS})
@@ -378,11 +377,12 @@ if (BUILD_GMT2IMG OR BUILD_HDFDATA)
     #   HDF5_C_LIBRARIES - Required libraries for the HDF5 C bindings.
     #   HDF5_CXX_LIBRARIES - Required libraries for the HDF5 C++ bindings
     #   HDF5_HL_LIBRARIES - Required libraries for the HDF5 high level API
-    find_package(HDF5 COMPONENTS C CXX HL TOOLS)
-    #find_package(HDF5)
+    #find_package(HDF5 COMPONENTS C CXX HL TOOLS)
+    find_package(HDF5)
 endif ()
 
-if (HDF5_FOUND AND HDF5_hdf5_cpp_LIBRARY AND HDF5_hdf5_tools_LIBRARY)
+#if (HDF5_FOUND AND HDF5_hdf5_cpp_LIBRARY AND HDF5_hdf5_tools_LIBRARY)
+if (HDF5_FOUND)
     message(STATUS "*** Found HDF5 libs ${HDF5_LIBRARIES} inc ${HDF5_INCLUDE_DIR}")
     include_directories( ${HDF5_INCLUDE_DIR} )
     list(APPEND add_LIBS ${HDF5_LIBRARIES})
