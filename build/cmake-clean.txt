@@ -1,1 +1,15 @@
 bldlog-1.txt
+bmp-1bit
+bmp_io
+bmp-test
+gmt2img
+gshhg
+Int2BMP
+libbmp_utils.a
+libpng_utils.a
+libutils.a
+pgm-test
+tga-test
+write-bmp1
+write-bmp2
+
