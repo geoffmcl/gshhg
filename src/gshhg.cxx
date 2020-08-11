@@ -102,6 +102,7 @@ static struct POINT p;
 static struct GSHHG h;
 static bool headers_only = false;
 static bool whole_features = false;
+static bool add_point_fix = true;
 
 enum geomtype {
     IS_POLY,
@@ -446,6 +447,8 @@ int main( int argc, char **argv )
     PointD pt, pt2;
     vPTS vPoints;
     bool inbbox = false;
+    bool inworld = false;
+    int outworld = 0;
     const char *title = "    id points lvso       area     f_area       west       east     south     north contai ancest";
     int iret = parse_args(argc,argv);
     if (iret) {
@@ -565,8 +568,37 @@ int main( int argc, char **argv )
 				if (must_swab) /* Must deal with different endianness */
 					bswap_POINT_struct (&p);
 				pt.x = p.x * GSHHG_SCL;
-				if ((greenwich && p.x > max_east) || (h.west > 180000000)) pt.x -= 360.0;
+				if ((greenwich && p.x > max_east) || (h.west > 180000000))
+                    pt.x -= 360.0;
 				pt.y = p.y * GSHHG_SCL;
+                inworld = in_world_range(pt.y, pt.x);
+                if (!inworld) {
+                    if (VERB5) {
+                        SPRTF("%s: File %s for %s %d, point %d - warn %f,%f NOT IN WORLD.\n", module,
+                            in_file, name[is_line], h.id, row, pt.y, pt.x);
+                    }
+                    outworld++;
+                    if (add_point_fix) {
+                        if (pt.x > 180.0)
+                            pt.x -= 360.0;
+                        else if (pt.x < -180.0)
+                            pt.x += 360.0;
+                        if (pt.y > 90.0)
+                            pt.y -= 180.0;
+                        else if (pt.y < -90.0)
+                            pt.y += 180.0;
+                        if (in_world_range(pt.y, pt.x)) {
+                            if (VERB5) {
+                                SPRTF("Point ajusted to %f,%f\n", pt.y, pt.x);
+                            }
+                        }
+                        else {
+                            if (VERB5) {
+                                SPRTF("Failed in adj to %f,%f\n", pt.y, pt.x);
+                            }
+                        }
+                    }
+                }
                 vPoints.push_back(pt);
                 if (got_bbox && !inbbox) {
                     if (in_bbox( pt.y, pt.x )) {
@@ -598,8 +630,37 @@ int main( int argc, char **argv )
 				if (must_swab) /* Must deal with different endianness */
 					bswap_POINT_struct (&p);
 				pt.x = p.x * GSHHG_SCL;
-				if ((greenwich && p.x > max_east) || (h.west > 180000000)) pt.x -= 360.0;
+				if ((greenwich && p.x > max_east) || (h.west > 180000000))
+                    pt.x -= 360.0;
 				pt.y = p.y * GSHHG_SCL;
+                inworld = in_world_range(pt.y, pt.x);
+                if (!inworld) {
+                    if (VERB5) {
+                        SPRTF("%s: File %s for %s %d, point %d - warn %f,%f NOT IN WORLD.\n", module,
+                            in_file, name[is_line], h.id, row, pt.y, pt.x);
+                    }
+                    outworld++;
+                    if (add_point_fix) {
+                        if (pt.x > 180.0)
+                            pt.x -= 360.0;
+                        else if (pt.x < -180.0)
+                            pt.x += 360.0;
+                        if (pt.y > 90.0)
+                            pt.y -= 180.0;
+                        else if (pt.y < -90.0)
+                            pt.y += 180.0;
+                        if (in_world_range(pt.y, pt.x)) {
+                            if (VERB5) {
+                                SPRTF("Point ajusted to %f,%f\n", pt.y, pt.x);
+                            }
+                        }
+                        else {
+                            if (VERB5) {
+                                SPRTF("Failed in adj to %f,%f\n", pt.y, pt.x);
+                            }
+                        }
+                    }
+                }
                 vPoints.push_back(pt);  // collect ALL points of this feature
                 inbbox = in_bbox( pt.y, pt.x );
                 if (inbbox) {
@@ -638,6 +699,12 @@ int main( int argc, char **argv )
         }
     } else if (out_file && !headers_only) {
         if (VERB1) SPRTF("%s: Got NO points!\n", module );
+    }
+    if (VERB1) {
+        if (outworld) {
+            SPRTF("%s: Had %d points out of world range, %s\n", module, outworld,
+                (add_point_fix ? "fixed" : "left as is"));
+        }
     }
     return iret;
 }
