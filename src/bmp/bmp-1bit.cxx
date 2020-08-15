@@ -85,13 +85,13 @@ int writeBMP1bit( const char *file, int w, int h, int bpp, unsigned char *bytes 
     //-----------------------   
     printf("Image width %d, height %d, bpp %d\n", w, h, bpp);
     BytesPerRow = (((Width * bpp)+31)/32)*4; 
-    printf("BytesPerRow = %d\n", BytesPerRow);
+    printf("BytesPerRow = %d\n", (int)BytesPerRow);
     BytesSize = BytesPerRow * Height;
-    printf("BytesSize   = %d\n", BytesSize);
+    printf("BytesSize   = %d\n", (int)BytesSize);
     FileSize = FileHeaderSize+InfoHeaderSize+PaletteSize+BytesSize;
-    printf("FileSize    = %d\n", FileSize);
+    printf("FileSize    = %d\n", (int)FileSize);
     OffBits= FileHeaderSize+ InfoHeaderSize+ PaletteSize;
-    printf("OffBits     = %d\n", OffBits);
+    printf("OffBits     = %d\n", (int)OffBits);
 
     //--------------------------      
     FILE *fp = fopen(file, "wb"); /* b - binary mode */
@@ -156,7 +156,7 @@ int writeBMP1bit( const char *file, int w, int h, int bpp, unsigned char *bytes 
                 printf("Only optional input allowed is the name of an output bmp file.\n");
                 printf("The default output is '%s'\n", out_file);
                 printf("Generates a random %d x %d monochrome bitmap file,\n", w, h );
-                printf("written to the output.\n", out_file);
+                printf("written to the output '%s'.\n", out_file);
                 return 1;
             } else {
                 out_file = arg;
