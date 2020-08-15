@@ -31,4 +31,5 @@ libutils.a
 Int2BMP
 x64/*
 *.xg
+.vs/*
 
