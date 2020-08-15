@@ -290,7 +290,7 @@ int get_bbox( char *bbox )
     return 1; // success
 }
 
-int set_log_file( int argc, char **argv )
+int parse_log_file( int argc, char **argv )
 {
     int i, c, i2;
     char *arg, *sarg;
@@ -327,7 +327,7 @@ int parse_args( int argc, char **argv )
     char *arg, *sarg;
     size_t len = 0;
     bool opt = false;
-    i = set_log_file(argc,argv);    // deal with the log file first
+    i = parse_log_file(argc,argv);    // deal with the log file first
     if (i)
         return i;
     for (i = 1; i < argc; i++) {
