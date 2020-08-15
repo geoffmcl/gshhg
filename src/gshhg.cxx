@@ -103,6 +103,7 @@ static struct GSHHG h;
 static bool headers_only = false;
 static bool whole_features = false;
 static bool add_point_fix = true;
+static bool check_wrap = true;
 
 enum geomtype {
     IS_POLY,
@@ -148,16 +149,22 @@ void give_help( char *name )
     SPRTF(INDENT "%s [options] in_gshhg_file\n", module );
     SPRTF("\n");
     SPRTF(INDENT "Options:\n");
-    SPRTF(INDENT " --help    (-h or -?) = This help and exit(2)\n");
+    SPRTF(INDENT " --help    (-h or -?) = This help and exit(0)\n");
     SPRTF(INDENT " --v[vvv]   or -v[nn] = Bump or set verbosity (def=%d)\n", verbosity);
     SPRTF(INDENT " --bbox <bbox>   (-b) = Only ouput the points in this bbox. -B to add boundary.\n");
-    SPRTF(INDENT " --fudge <degs>  (-f) = Expand the bounding by by this 'fudge' factor. (def=%lf)\n", fudge );
-    SPRTF(INDENT " --whole         (-w) = Add whole feature if a single point is in this box.\n");
+    SPRTF(INDENT " --color <color> (-c) = Set the output line color. (def=%s)\n", out_color);
+    SPRTF(INDENT " --fudge <degs>  (-f) = Expand the bounding box, by by this 'fudge' factor. (def=%lf)\n", fudge );
+    SPRTF(INDENT " --whole[-]      (-w) = Add whole feature if a single point is in this box. (def=%s)\n",
+        (whole_features ? "On" : "Off"));
     SPRTF(INDENT " --xg <file>     (-x) = Set xg output file. 'none' for no xg. (def=%s)\n",
         (out_file ? out_file : "none") ); 
-    SPRTF(INDENT " --display       (-d) = Display headers only. Implies verbosity. (def=%s)\n",
+    SPRTF(INDENT " --display[-]    (-d) = Display headers only. Implies verbosity. (def=%s)\n",
         (headers_only ? "on" : "off") );
     SPRTF(INDENT " --log <file>    (-l) = Set the log file. (def=%s)\n", log_file);
+    SPRTF(INDENT " --Fix[-]        (-F) = Try to FIX out of world points. (def=%s)\n",
+        (add_point_fix ? "On" : "Off"));
+    SPRTF(INDENT " --Wrap[-]       (-W) = Try to avoid E/W screen wrap. (def=%s)\n",
+        (check_wrap ? "On" : "Off"));
     SPRTF("\n");
     SPRTF(INDENT "Notes:\n");
     SPRTF(INDENT " Verbosity points are 0, 1, 2, 5, and 9 for all messages.\n");
@@ -165,12 +172,13 @@ void give_help( char *name )
         (whole_features ? "on" : "off") );
     SPRTF(INDENT " The bbox = min_lon,min_lat,max_lon,max_lat. Separated by any non-digit char.\n");
     SPRTF(INDENT " The xg file is a small subset of XGraph 2D display, as can be viewed\n");
-    SPRTF(INDENT " by https://sites.google.com/site/polyview2d/\n");
+    SPRTF(INDENT " by https://github.com/geoffmcl/PolyView, a Qt5 app.\n");
+    SPRTF(INDENT " Boolean options, like -W,-F, ... support a trailing '-', to set the option OFF.\n");
     SPRTF(INDENT " All output is written to both stdout, and the log file.\n");
     SPRTF("\n");
     SPRTF(INDENT "Will extract all points from the gshhs bin file, and write the results\n");
     SPRTF(INDENT "to the xg file for viewing.\n");
-    SPRTF("                                                     Happy data extraction.\n");
+    SPRTF("                                                     Happy GSHHG data extraction.\n");
 }
 
 #define ISDIGIT(a) (( a >= '0' ) && ( a <= '9' ))
@@ -317,6 +325,8 @@ int parse_args( int argc, char **argv )
 {
     int i, c, i2;
     char *arg, *sarg;
+    size_t len = 0;
+    bool opt = false;
     i = set_log_file(argc,argv);    // deal with the log file first
     if (i)
         return i;
@@ -331,6 +341,7 @@ int parse_args( int argc, char **argv )
             sarg = &arg[1];
             while (*sarg == '-') sarg++;
             c = *sarg;
+            len = strlen(sarg);
             switch (c) {
             case '?':
             case 'h':
@@ -355,9 +366,27 @@ int parse_args( int argc, char **argv )
                     return 1;
                 }
                 break;
+            case 'c':
+                if (i2 < argc) {
+                    i++;
+                    sarg = argv[i];
+                    out_color = strdup(sarg);
+                    if (VERB1) SPRTF("%s: Set out 'color' to '%s'.\n", module, out_color);
+                }
+                else {
+                    SPRTF("%s: Expected 'color' to follow %s! Aborting...\n", module, arg);
+                    return 1;
+                }
+                break;
             case 'd':
-                headers_only = true;
-                if (VERB1) SPRTF("%s: Set to diplay headers only, skipping points.\n", module);
+                opt = true;
+                if ((len > 1) && sarg[len - 1] == '-')
+                    opt = false;
+                headers_only = opt;
+                if (VERB1) {
+                    SPRTF("%s: Set diplay headers only %s.\n", module,
+                        (headers_only ? "On, skipping points" : "Off"));
+                }
                 break;
             case 'f':
                 if (i2 < argc) {
@@ -392,8 +421,14 @@ int parse_args( int argc, char **argv )
                 if (VERB1) SPRTF("%s: Set verbosity to %d\n", module, verbosity);
                 break;
             case 'w':
-                whole_features = true;
-                if (VERB1) SPRTF("%s: Set whole feature if any point in bbox.\n", module);
+                opt = true;
+                if ((len > 1) && sarg[len - 1] == '-')
+                    opt = false;
+                whole_features = opt;
+                if (VERB1) {
+                    SPRTF("%s: Set whole feature %s, if any point in bbox.\n", module,
+                        (whole_features ? "On" : "Off"));
+                }
                 break;
             case 'x':
                 if (i2 < argc) {
@@ -411,6 +446,26 @@ int parse_args( int argc, char **argv )
                     return 1;
                 }
                 break;
+            case 'F':
+                opt = true;
+                if ((len > 1) && sarg[len - 1] == '-')
+                    opt = false;
+                add_point_fix = opt;
+                if (VERB1) {
+                    SPRTF("%s: Set add point fix %s.\n", module,
+                        (add_point_fix ? "On" : "Off"));
+                }
+                break;
+            case 'W':
+                opt = true;
+                if ((len > 1) && sarg[len - 1] == '-')
+                    opt = false;
+                check_wrap = opt;
+                if (VERB1) {
+                    SPRTF("%s: Set check screen wrap %s.\n", module,
+                        (check_wrap ? "On" : "Off"));
+                }
+                break;
             default:
 Bad_CMD:
                 SPRTF("%s: Unknown argument '%s'! Aborting...\n", module, arg );
@@ -426,6 +481,17 @@ Bad_CMD:
         }
     }
     return 0;
+}
+
+int screen_wrap(PointD pt1, PointD pt2)
+{
+    if ((pt1.x < -170) && (pt2.x > 170))
+        return 1;
+
+    if ((pt2.x < -170) && (pt1.x > 170))
+        return 1;
+
+    return 0;   // noscreen wrap
 }
 
 // main() OS entry
@@ -449,6 +515,7 @@ int main( int argc, char **argv )
     bool inbbox = false;
     bool inworld = false;
     int outworld = 0;
+    int wrapped = 0;
     const char *title = "    id points lvso       area     f_area       west       east     south     north contai ancest";
     int iret = parse_args(argc,argv);
     if (iret) {
@@ -610,8 +677,14 @@ int main( int argc, char **argv )
                 size_t jj, max = vPoints.size();
                 for (jj = 0; jj < max; jj++) {
                     pt = vPoints[jj];
+                    if (jj && screen_wrap(pt2, pt)) {
+                        if (check_wrap)
+                            xg << "NEXT" << std::endl;
+                        wrapped++;
+                    }
                     xg << pt.x << " " << pt.y << std::endl;
                     pt_count++;
+                    pt2 = pt;
                 }
                 xg << "NEXT" << std::endl;
             }
@@ -669,6 +742,22 @@ int main( int argc, char **argv )
                             xg << pt2.x << " " << pt2.y << std::endl;
                             pt_count++;
                         }
+                        if (screen_wrap(pt2, pt)) {
+                            wrapped++;
+                            if (check_wrap) {
+                                xg << "NEXT" << std::endl;  // close line
+                                if (VERB5) {
+                                    SPRTF("%s: Found possible wrap %f vs %f, and fixed adding a 'next'!\n",
+                                        module, pt2.x, pt.x);
+                                }
+                            }
+                            else {
+                                if (VERB5) {
+                                    SPRTF("%s: Found possible wrap %f vs %f! But Fix wrap is off.\n",
+                                        module, pt2.x, pt.x);
+                                }
+                            }
+                        }
                         xg << pt.x << " " << pt.y << std::endl;
                         pt_count++;
                     }
@@ -702,8 +791,13 @@ int main( int argc, char **argv )
     }
     if (VERB1) {
         if (outworld) {
-            SPRTF("%s: Had %d points out of world range, %s\n", module, outworld,
+            SPRTF("%s: Had %d points out of world range, %s.\n", module, outworld,
                 (add_point_fix ? "fixed" : "left as is"));
+        }
+        if (wrapped) {
+            SPRTF("%s: Had %d points appear to wrap screen, %s.\n", module, wrapped,
+                (check_wrap ? "fixed" : "left as is"));
+
         }
     }
     return iret;
