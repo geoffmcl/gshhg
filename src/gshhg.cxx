@@ -1,7 +1,7 @@
 /*\
  * gshhg.cxx
  *
- * Copyright (c) 2015 - 2019 - Geoff R. McLane
+ * Copyright (c) 2015 - 2020 - Geoff R. McLane
  * Licence: GNU GPL version 2
  *
  * from : http://www.soest.hawaii.edu/pwessel/gshhg/
@@ -53,6 +53,7 @@
 #include <sstream>      // std::stringstream
 #include <vector>
 #include "sprtf.hxx"
+#include "utils.hxx"
 #include "gshhg.hxx"
 
 using namespace std;
@@ -114,6 +115,7 @@ static char header[1024];
 static double min_lon, min_lat, max_lon, max_lat;
 static bool got_bbox = false;
 
+#ifndef _UTILS_HXX_
 bool in_world_range( double lat, double lon )
 {
     if ((lat < -90.0) ||
@@ -123,6 +125,7 @@ bool in_world_range( double lat, double lon )
         return false;
     return true;
 }
+#endif // !#ifndef _UTILS_HXX_
 
 bool in_bbox( double lat, double lon )
 {
@@ -181,7 +184,9 @@ void give_help( char *name )
     SPRTF("                                                     Happy GSHHG data extraction.\n");
 }
 
+#ifndef _UTILS_HXX_
 #define ISDIGIT(a) (( a >= '0' ) && ( a <= '9' ))
+#endif // !#ifndef _UTILS_HXX_
 #define ISEXTDIGIT(a) ISDIGIT(a) || ( a == '.' ) || ( a == '-' )
 
 static int is_digits(char * arg)
@@ -384,7 +389,7 @@ int parse_args( int argc, char **argv )
                     opt = false;
                 headers_only = opt;
                 if (VERB1) {
-                    SPRTF("%s: Set diplay headers only %s.\n", module,
+                    SPRTF("%s: Set display headers only %s.\n", module,
                         (headers_only ? "On, skipping points" : "Off"));
                 }
                 break;
@@ -780,11 +785,32 @@ int main( int argc, char **argv )
     }
     fclose(fp);
     if (pt_count && out_file) {
+        if (is_file_or_directory((char *)out_file) == 1) {
+            char* tb = GetNxtBuf();
+            strcpy(tb, out_file);
+            strcat(tb, ".bak");
+            if (is_file_or_directory(tb) == 1) {
+                if (delete_file(tb)) {
+                    if (VERB1) SPRTF("%s: FAILED to delete previous backup file '%s'\n", module, tb);
+                }
+            }
+            if (rename_file(out_file, tb)) {
+                if (VERB1) SPRTF("%s: FAILED to RENAME file '%s' to '%s'\n", module, out_file, tb);
+            }
+        }
         fp = fopen(out_file,"w");
         if (fp) {
-            fwrite( xg.str().c_str(), xg.str().size(), 1, fp);
+            n_read = fwrite( xg.str().c_str(), 1, xg.str().size(), fp);
             fclose(fp);
-            if (VERB1) SPRTF("%s: Written %d points to '%s'\n", module, pt_count, out_file );
+            if (n_read == xg.str().size()) {
+                if (VERB1) SPRTF("%s: Written %d points to '%s'\n", module, pt_count, out_file);
+            }
+            else {
+                if (VERB1) SPRTF("%s: FAILED to write %d points to '%s'\n", module, pt_count, out_file);
+            }
+        }
+        else {
+            if (VERB1) SPRTF("%s: FAILED to write %d points to '%s'\n", module, pt_count, out_file);
         }
     } else if (out_file && !headers_only) {
         if (VERB1) SPRTF("%s: Got NO points!\n", module );

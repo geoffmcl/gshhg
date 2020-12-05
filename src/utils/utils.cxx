@@ -51,6 +51,25 @@ int is_file_or_directory( char *file )
 
 size_t get_last_file_size() { return stat_buf.st_size; }
 
+int delete_file(const char* file)
+{
+    if (is_file_or_directory((char*)file) == 1)
+        return remove(file);
+    return 1;
+}
+
+int rename_file(const char* oldName, const char* newName)
+{
+    if (is_file_or_directory((char*)oldName) == 1)
+    {
+        if (is_file_or_directory((char*)newName) == 0)
+        {
+            return rename(oldName, newName);
+        }
+    }
+    return 1;
+}
+
 int is_an_integer( char *arg )
 {
     int len = (int)strlen(arg);
