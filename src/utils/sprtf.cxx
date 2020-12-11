@@ -26,6 +26,7 @@
 
 // Module: sprtf.cxx
 // Debug log file output
+#include <sys/stat.h>
 #include <stdio.h> // fopen()...
 #include <string.h> // strcpy
 #include <stdarg.h> // va_start, va_end, ...
@@ -33,6 +34,7 @@
 //////////////////////////////////////////////////////////////////
 #include <WinSock2.h>
 #include <sys/timeb.h>
+#include <direct.h> // for _mkdir, ...
 //////////////////////////////////////////////////////////////////
 #else /* !_MSC_VER */
 //////////////////////////////////////////////////////////////////
@@ -42,6 +44,8 @@
 #endif /* _MSC_VER y/n */
 #include <time.h>
 #include <stdlib.h> // for exit() in unix
+#include <string>
+#include "utils.hxx"
 #include "sprtf.hxx"
 
 #ifdef _MSC_VER
@@ -72,13 +76,10 @@ char *GetNxtBuf()
 }
 
 #define  MXIO     512
-#ifdef _MSC_VER // use local log
-static const char *def_log = "cf_client.txt";
-#else
-static const char *def_log = "/var/log/crossfeed/cf_client.log";
-#endif
-char logfile[256] = "\0";
-FILE * outfile = NULL;
+static const char *def_log = "templog.txt";
+static char logpath[256] = "\0";
+static char currlog[256] = "\0";
+static FILE * outfile = NULL;
 static int addsystime = 0;
 static int addstdout = 1;
 static int addflush = 1;
@@ -142,10 +143,65 @@ static const char *mode = "wb"; // in window sprtf looks after the line endings
 static const char *mode = "w";
 #endif
 
+bool Get_LocalData_Path(char* path)
+{
+    bool isok = false;
+#ifdef WIN32 // use getenv("LOCALAPPDATA")\gshhg
+    char* cp = getenv("LOCALAPPDATA");
+    if (cp) {
+        std::string s = cp;
+        s += "\\gshhg";
+        if (is_file_or_directory((char*)s.c_str()) != 2) {
+            _mkdir(s.c_str()); // create a directory
+        }
+        if (is_file_or_directory((char*)s.c_str()) == 2) {
+            strcpy(path, s.c_str());
+            strcat(path, "\\");
+            isok = true;
+        }
+    }
+#else        // !#ifdef WIN32 - Try for $HOME/.config/sudoku 
+    char* cp = getenv("HOME");
+    if (cp) {
+        std::string s = cp;
+        s += "/.config";
+        if (is_file_or_directory((char*)s.c_str()) != 2) {
+            mkdir(s.c_str(), 0700); // create a directory
+        }
+        if (is_file_or_directory((char*)s.c_str()) == 2) {
+            s += "/gshhg";
+            if (is_file_or_directory((char*)s.c_str()) != 2) {
+                mkdir(s.c_str(), 0700); // create a directory
+            }
+            if (is_file_or_directory((char*)s.c_str()) == 2) {
+                strcpy(path, s.c_str());
+                strcat(path, "/");
+                isok = true;
+            }
+        }
+    }
+#endif      // #ifdef WIN32 y/n - OS path for INI file
+    return isok;
+}
+
+char* get_log_path()
+{
+    if (logpath[0] == 0)
+        Get_LocalData_Path(logpath);
+    return logpath;
+}
+
+void set_def_log(const char * log)
+{
+    char *path = get_log_path();
+    strcpy(currlog, path);
+    strcat(currlog, log);
+}
+
+
 int   open_log_file( void )
 {
-   if (logfile[0] == 0)
-      strcpy(logfile,def_log);
+    set_def_log(def_log);
    if (append_to_log) {
 #ifdef _MSC_VER
         mode = "ab"; // in window sprtf looks after the line endings
@@ -153,10 +209,10 @@ int   open_log_file( void )
         mode = "a";
 #endif
    }
-   outfile = fopen(logfile, mode);
+   outfile = fopen(currlog, mode);
    if( outfile == 0 ) {
       outfile = (FILE *)-1;
-      sprtf("ERROR: Failed to open log file [%s] ...\n", logfile);
+      sprtf("ERROR: Failed to open log file [%s] ...\n", currlog);
       exit(1); /* failed */
       return 0;   /* failed */
    }
@@ -173,21 +229,20 @@ void close_log_file( void )
 
 char * get_log_file( void )
 {
-   if (logfile[0] == 0)
-      strcpy(logfile,def_log);
+   set_def_log(def_log);
    if (outfile == (FILE *)-1) // disable the log file
        return (char *)"none";
-   return logfile;
+   return currlog;
 }
 
 void   set_log_file( char * nf, bool open )
 {
-   if (logfile[0] == 0)
-      strcpy(logfile,def_log);
-   if ( nf && *nf && strcmpi(nf,logfile) ) {
+   set_def_log(def_log);
+   if ( nf && *nf && strcmpi(nf,def_log) ) {
       close_log_file(); // remove any previous
-      strcpy(logfile,nf); // set new name
-      if (strcmp(logfile,"none") == 0) { // if equal 'none'
+      logpath[0] = 0;
+      set_def_log(nf);  // set new name
+      if (strcmp(currlog,"none") == 0) { // if equal 'none'
           outfile = (FILE *)-1; // disable the log file
       } else if (open) {
           open_log_file();  // and open it ... anything previous written is 'lost'
@@ -295,7 +350,7 @@ static void oi( char * ps )
          if( w != len ) {
             fclose(outfile);
             outfile = (FILE *)-1;
-            sprtf("WARNING: Failed write to log file [%s] ...\n", logfile);
+            sprtf("WARNING: Failed write to log file [%s] ...\n", currlog);
             exit(1);
          } else if (addflush) {
             fflush( outfile );

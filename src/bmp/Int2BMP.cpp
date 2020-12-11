@@ -16,8 +16,8 @@
 #include <SDKDDKVer.h>
 #include <tchar.h>
 #else
-#include <string.h> // for strlen, ...
 #endif
+#include <string.h> // for strlen, ...
 #include <stdio.h>
 #include <cstdint>
 #include <iostream>
@@ -27,6 +27,7 @@
 #include <random>
 #include <ctime>
 #include <memory>
+#include "sprtf.hxx"
 
 #define ADD_RAND_FILE
 //#define USE_STD_MT19937 // to use std::mt19937 rng;
@@ -159,7 +160,14 @@ void MakeIntegerFile( const std::string& integerFilename )
 }
 
 static const char *in_file = "temp-integers.txt";
-static const char *out_file = "temp-bitmap.bmp";
+static const char *def_out = "temp-bitmap.bmp";
+static char out_file[264];
+
+static void set_bmp_def_out()
+{
+    strcpy(out_file, get_log_path());
+    strcat(out_file, def_out);
+}
 
 static char info[] =
     " Will read the in_file as an array of integers, space separated,\n"
@@ -237,7 +245,7 @@ int main( int argc, char* argv[] )
             case 'o':
                 if (i2 < argc) {
                     i++;
-                    out_file = argv[i];
+                    strcpy(out_file, argv[i]);
                 } else {
                     printf("Error: Expected output file name to follow '%s'\n", arg);
                     return 1;
@@ -304,7 +312,7 @@ int main( int argc, char* argv[] )
     std::cout << "Constructing BMP...\n";
     BMP bmp;
     size_t intCount = integers.size();
-    bmp.DIBHeader.bitmapSizeInBytes = intCount * sizeof( integers[ 0 ] );
+    bmp.DIBHeader.bitmapSizeInBytes = (uint32_t)(intCount * sizeof( integers[ 0 ] ));
     bmp.FileHeader.fileSizeInBytes = bmp.FileHeader.pixelArrayOffsetInBytes + bmp.DIBHeader.bitmapSizeInBytes;
     bmp.DIBHeader.bitmapWidthInPixels = static_cast< uint32_t >( ceil( sqrt( (double)intCount ) ) );
     bmp.DIBHeader.bitmapHeightInPixels = static_cast< uint32_t >( ceil( intCount / static_cast< float >( bmp.DIBHeader.bitmapWidthInPixels ) ) );

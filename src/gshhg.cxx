@@ -85,9 +85,11 @@ static const bool must_swab = false;
 static const bool must_swab = true;
 #endif
 
-static const char *log_file = "tempgshhg.txt";
+static const char *def_log = "tempgshhg.txt";
+// static char curr_log[264];
 static const char *in_file = 0;
-static const char *out_file = "templist.xg";
+static const char *def_xg = "templist.xg";
+static char curr_xg[264];
 static const char *out_color = "blue";
 static double fudge = 0.0;
 static bool add_boundary = false;
@@ -159,11 +161,10 @@ void give_help( char *name )
     SPRTF(INDENT " --fudge <degs>  (-f) = Expand the bounding box, by by this 'fudge' factor. (def=%lf)\n", fudge );
     SPRTF(INDENT " --whole[-]      (-w) = Add whole feature if a single point is in this box. (def=%s)\n",
         (whole_features ? "On" : "Off"));
-    SPRTF(INDENT " --xg <file>     (-x) = Set xg output file. 'none' for no xg. (def=%s)\n",
-        (out_file ? out_file : "none") ); 
+    SPRTF(INDENT " --xg <file>     (-x) = Set xg output file. 'none' for no xg. (def=%s)\n", curr_xg);
     SPRTF(INDENT " --display[-]    (-d) = Display headers only. Implies verbosity. (def=%s)\n",
         (headers_only ? "on" : "off") );
-    SPRTF(INDENT " --log <file>    (-l) = Set the log file. (def=%s)\n", log_file);
+    SPRTF(INDENT " --log <file>    (-l) = Set the log file. (def=%s)\n", get_log_file());
     SPRTF(INDENT " --Fix[-]        (-F) = Try to FIX out of world points. (def=%s)\n",
         (add_point_fix ? "On" : "Off"));
     SPRTF(INDENT " --Wrap[-]       (-W) = Try to avoid E/W screen wrap. (def=%s)\n",
@@ -299,6 +300,7 @@ int parse_log_file( int argc, char **argv )
 {
     int i, c, i2;
     char *arg, *sarg;
+    set_def_log(def_log);
     for (i = 1; i < argc; i++) {
         i2 = i + 1;
         arg = argv[i];
@@ -311,8 +313,8 @@ int parse_log_file( int argc, char **argv )
                 if (i2 < argc) {
                     i++;
                     sarg = argv[i];
-                    log_file = strdup(sarg);
-                    if (VERB1) SPRTF("%s: Set log file to '%s'\n", module, log_file);
+                    set_log_file((char*)sarg, false);
+                    if (VERB1) SPRTF("%s: Set log file to '%s'\n", module, get_log_file());
                 } else {
                     SPRTF("%s: Expected log file name to follow %s! Aborting...\n", module, arg);
                     return 1;
@@ -321,7 +323,8 @@ int parse_log_file( int argc, char **argv )
             }
         }
     }
-    set_log_file((char *)log_file,false);
+    strcpy(curr_xg, get_log_path());
+    strcat(curr_xg, def_xg);
     return 0;
 }
 
@@ -440,11 +443,11 @@ int parse_args( int argc, char **argv )
                     i++;
                     sarg = argv[i];
                     if (strcmp(sarg,"none")) {
-                        out_file = strdup(sarg);
-                        if (VERB1) SPRTF("%s: Set xg out file to '%s'\n", module, out_file);
+                        strcpy(curr_xg, sarg);
+                        if (VERB1) SPRTF("%s: Set xg out file to '%s'\n", module, curr_xg);
                     } else {
-                        out_file = 0;
-                        if (VERB1) SPRTF("%s: Set xg out file is disabled.\n", module, out_file);
+                        strcpy(curr_xg, sarg);
+                        if (VERB1) SPRTF("%s: Set xg out file is disabled. (%s)\n", module, curr_xg);
                     }
                 } else {
                     SPRTF("%s: Expected xg out file (or none) to follow %s! Aborting...\n", module, arg);
@@ -784,35 +787,35 @@ int main( int argc, char **argv )
 		n_read = fread (&h, sizeof (struct GSHHG), 1U, fp);	/* Get the next GSHHG header */
     }
     fclose(fp);
-    if (pt_count && out_file) {
-        if (is_file_or_directory((char *)out_file) == 1) {
+    if (pt_count && (strcmp(curr_xg,"none"))) {
+        if (is_file_or_directory((char *)curr_xg) == 1) {
             char* tb = GetNxtBuf();
-            strcpy(tb, out_file);
+            strcpy(tb, curr_xg);
             strcat(tb, ".bak");
             if (is_file_or_directory(tb) == 1) {
                 if (delete_file(tb)) {
                     if (VERB1) SPRTF("%s: FAILED to delete previous backup file '%s'\n", module, tb);
                 }
             }
-            if (rename_file(out_file, tb)) {
-                if (VERB1) SPRTF("%s: FAILED to RENAME file '%s' to '%s'\n", module, out_file, tb);
+            if (rename_file(curr_xg, tb)) {
+                if (VERB1) SPRTF("%s: FAILED to RENAME file '%s' to '%s'\n", module, curr_xg, tb);
             }
         }
-        fp = fopen(out_file,"w");
+        fp = fopen(curr_xg,"w");
         if (fp) {
             n_read = fwrite( xg.str().c_str(), 1, xg.str().size(), fp);
             fclose(fp);
             if (n_read == xg.str().size()) {
-                if (VERB1) SPRTF("%s: Written %d points to '%s'\n", module, pt_count, out_file);
+                if (VERB1) SPRTF("%s: Written %d points to '%s'\n", module, pt_count, curr_xg);
             }
             else {
-                if (VERB1) SPRTF("%s: FAILED to write %d points to '%s'\n", module, pt_count, out_file);
+                if (VERB1) SPRTF("%s: FAILED to write %d points to '%s'\n", module, pt_count, curr_xg);
             }
         }
         else {
-            if (VERB1) SPRTF("%s: FAILED to write %d points to '%s'\n", module, pt_count, out_file);
+            if (VERB1) SPRTF("%s: FAILED to write %d points to '%s'\n", module, pt_count, curr_xg);
         }
-    } else if (out_file && !headers_only) {
+    } else if (strcmp(curr_xg,"none") && !headers_only) {
         if (VERB1) SPRTF("%s: Got NO points!\n", module );
     }
     if (VERB1) {

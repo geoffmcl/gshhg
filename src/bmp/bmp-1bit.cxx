@@ -20,8 +20,17 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include "sprtf.hxx"
 
-static const char *out_file = "temp1bit.bmp";
+static const char *def_out = "temp1bit.bmp";
+static char out_file[264];
+
+static void set_bmp_def_out()
+{
+    strcpy(out_file, get_log_path());
+    strcat(out_file, def_out);
+}
 
 unsigned char *genImage( int w, int h, int bpp )
 {
@@ -146,6 +155,7 @@ int writeBMP1bit( const char *file, int w, int h, int bpp, unsigned char *bytes 
     char *arg;
     int iret;
     unsigned char *bytes;
+    set_bmp_def_out();
     if (argc < 2) {
         printf("Generating a random %d x %d monochrome bitmap file,\n", w, h );
         printf("written to the output '%s'.\n", out_file);
@@ -159,7 +169,7 @@ int writeBMP1bit( const char *file, int w, int h, int bpp, unsigned char *bytes 
                 printf("written to the output '%s'.\n", out_file);
                 return 1;
             } else {
-                out_file = arg;
+                strcpy(out_file, arg);
             }
         }
     }

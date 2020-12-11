@@ -59,6 +59,8 @@ extern char *GetNxtBuf();
 extern char *get_date_stg();
 extern char *get_time_stg();
 extern char *get_date_time_stg();
+extern char* get_log_path();
+extern void set_def_log(const char* log);
 
 #ifdef _MSC_VER
 extern int gettimeofday(struct timeval *tp, void *tzp);
