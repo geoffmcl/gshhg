@@ -159,7 +159,9 @@ void MakeIntegerFile( const std::string& integerFilename )
 
 }
 
-static const char *in_file = "temp-integers.txt";
+static const char *def_in = "temp-integers.txt";
+static char in_file[264];
+
 static const char *def_out = "temp-bitmap.bmp";
 static char out_file[264];
 
@@ -167,6 +169,12 @@ static void set_bmp_def_out()
 {
     strcpy(out_file, get_log_path());
     strcat(out_file, def_out);
+}
+
+static void set_int_def_in()
+{
+    strcpy(in_file, get_log_path());
+    strcat(in_file, def_in);
 }
 
 static char info[] =
@@ -215,6 +223,8 @@ int main( int argc, char* argv[] )
 {
     int c, i, i2;
     char *arg, *sarg;
+    set_bmp_def_out();
+    set_int_def_in();
     for (i = 1; i < argc; i++) {
         i2 = i + 1;
         arg = argv[i];
@@ -236,7 +246,7 @@ int main( int argc, char* argv[] )
             case 'i':
                 if (i2 < argc) {
                     i++;
-                    in_file = argv[i];
+                    strcpy(in_file, argv[i]);
                 } else {
                     printf("Error: Expected input file name to follow '%s'\n", arg);
                     return 1;
